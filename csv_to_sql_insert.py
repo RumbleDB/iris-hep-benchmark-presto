@@ -33,12 +33,15 @@ def gradually_insert(path, col_name='str', catalog='memory'):
 	def _execute_command(q):
 		with open("temp.sql", "w") as f:
 			f.write(collector)
-		run(['run_presto.sh', catalog, "temp.sql"])  
+		run(['./run_presto.sh', catalog, "temp.sql"])  
 
 	data = pandas.read_csv(path)
 	collector = cl = "INSERT INTO {} VALUES".format(TABLE_NAME) 
 
 	for i, row in data.iterrows():
+		if i > 5:
+			break
+
 		if i % 100 == 0 and i != 0:
 			print("At row:", i)
 			collector += " (" + row[col_name] + ");"
