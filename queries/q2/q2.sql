@@ -1,16 +1,17 @@
 SELECT
   CAST((
     CASE
-      WHEN MET_sumet < 0 THEN 0
-      WHEN MET_sumet > 2000 THEN 2000
-      ELSE MET_sumet
-    END - 10) / 20 AS BIGINT) * 20 + 10 AS x,
+      WHEN jet < 15 THEN 15
+      WHEN jet > 60 THEN 60
+      ELSE jet
+    END - 0.375) / 0.45 AS BIGINT) * 0.45 + 0.375 AS x,
   COUNT(*) AS y
-FROM memory.cern.view
+FROM memory.cern.Run2012B_SingleMu_small
+CROSS JOIN UNNEST(Jet_pt) AS t (jet)
 GROUP BY CAST((
     CASE
-      WHEN MET_sumet < 0 THEN 0
-      WHEN MET_sumet > 2000 THEN 2000
-      ELSE MET_sumet
-    END - 10) / 20 AS BIGINT) * 20 + 10
+      WHEN jet < 15 THEN 15
+      WHEN jet > 60 THEN 60
+      ELSE jet
+    END - 0.375) / 0.45 AS BIGINT) * 0.45 + 0.375
 ORDER BY x;

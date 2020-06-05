@@ -39,7 +39,7 @@ def gradually_insert(path, col_name='str', catalog='memory'):
 	collector = cl = "INSERT INTO {} VALUES".format(TABLE_NAME) 
 
 	for i, row in data.iterrows():
-		if i % 200 == 0 and i != 0:
+		if i % 300 == 0 and i != 0:
 			print("At row:", i)
 			collector += " (" + row[col_name] + ");"
 			_execute_command(collector)

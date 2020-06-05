@@ -141,11 +141,11 @@ SELECT
   main.nTau,
   main.nPhoton,
   main.nElectron,
-  Electron,
+  Electron AS Electrons,
   main.nMuon, 
-  Muon,
+  Muon AS Muons,
   main.nJet,
-  Jet
+  Jet AS Jets
 FROM memory.cern.run2012b_singlemu_small AS main
 FULL JOIN jet_table AS j on main.event = j.event
 FULL JOIN electron_table AS e ON main.event = e.event
