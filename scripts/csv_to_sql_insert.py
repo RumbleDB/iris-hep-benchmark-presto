@@ -1,5 +1,6 @@
 import pandas
 import re
+import os
 
 from os.path import join
 from os import getcwd
@@ -53,7 +54,7 @@ def gradually_insert(path, col_name='str', catalog='memory'):
 		_execute_command(collector)
 
 
-def stringify_data(path, col_name="str", out_name="../data/stringified.csv"):
+def stringify_data(path, col_name="str", out_path="../data", out_name="stringified.csv"):
 	"""
 	Read a parquet file as a DF, and add a new column whose name is specified  
 	in the col_name parameter. This column holds the row's other columns 
@@ -64,9 +65,15 @@ def stringify_data(path, col_name="str", out_name="../data/stringified.csv"):
 	:param col_name: the name of the new column
 	:param out_name: the name of the output csv
 	"""
+	# Create the folder where the data is saved
+	if not os.path.exists(out_path):
+		os.mkdir(out_path)
+	save_path = join(out_path, out_name)
+
 	data = pandas.read_parquet(path)
 	data[col_name] = data[data.columns].astype(str).apply(lambda x: ', '.join(x), axis=1)
-	data.to_csv(out_name, index=False)
+	data.to_csv(save_path, index=False)
+	return col_name, save_path
 
 
 def add_commas(path, col_name="str", out_name="../data/stringified_new.csv"):
@@ -89,9 +96,10 @@ def add_commas(path, col_name="str", out_name="../data/stringified_new.csv"):
 	data = pandas.read_csv(path)
 	data[col_name] = data[col_name].apply(_inner_transform)
 	data.to_csv(out_name, index=False)
+	return out_name
 
 
 if __name__ == '__main__':
-	# stringify_data(CSV_PATH)
-	# add_commas("../data/stringified.csv")
-	gradually_insert("../data/stringified_new.csv")
+	col_name, save_path = stringify_data(CSV_PATH)
+	save_path = add_commas(save_path, col_name)
+	gradually_insert(save_path, col_name)
