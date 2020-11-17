@@ -9,6 +9,7 @@ SELECT event,
       ROW(
         pt, 
         eta, 
+        phi,
         mass, 
         puId, 
         btag
@@ -16,6 +17,7 @@ SELECT event,
       AS ROW(
         pt DOUBLE, 
         eta DOUBLE, 
+        phi DOUBLE, 
         mass DOUBLE, 
         puId BOOLEAN, 
         btag DOUBLE
@@ -23,7 +25,7 @@ SELECT event,
     )
   ) AS Jet
 FROM memory.cern.run2012b_singlemu_small
-CROSS JOIN UNNEST(Jet_pt, Jet_eta, Jet_mass, Jet_puId, Jet_btag) AS t (pt, eta, mass, puId, btag)
+CROSS JOIN UNNEST(Jet_pt, Jet_eta, Jet_phi, Jet_mass, Jet_puId, Jet_btag) AS t (pt, eta, phi, mass, puId, btag)
 GROUP BY event;
 
 CREATE TABLE IF NOT EXISTS electron_table AS
