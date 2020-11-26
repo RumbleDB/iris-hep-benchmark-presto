@@ -6,7 +6,8 @@ from os.path import join
 from os import getcwd
 from subprocess import run
 
-CSV_PATH = '/home/dan/data/garbage/cern_queries/presto/data/Run2012B_SingleMu_small.parquet'
+# CSV_PATH = '/home/dan/data/garbage/cern_queries/presto/data/Run2012B_SingleMu_small.parquet'
+CSV_PATH = '/home/dan/data/garbage/ingo_cern_test/cern-rumble-queries/data/Run2012B_SingleMu-1000.parquet'
 TABLE_NAME = "memory.cern.Run2012B_SingleMu_small"
 
 
@@ -20,7 +21,7 @@ def make_sql_insert_script(path, col_name='str'):
 
 		f.write(";")
 
-def gradually_insert(path, col_name='str', catalog='memory'):
+def gradually_insert(path, col_name='str', catalog='memory', dump_count=400):
 	"""
 	Gradually inserts the rows in the DF located at path. The rows
 	should already be concatenated together into a string under 
@@ -40,7 +41,7 @@ def gradually_insert(path, col_name='str', catalog='memory'):
 	collector = cl = "INSERT INTO {} VALUES".format(TABLE_NAME) 
 
 	for i, row in data.iterrows():
-		if i % 300 == 0 and i != 0:
+		if i % dump_count == 0 and i != 0:
 			print("At row:", i)
 			collector += " (" + row[col_name] + ");"
 			_execute_command(collector)
@@ -103,3 +104,4 @@ if __name__ == '__main__':
 	col_name, save_path = stringify_data(CSV_PATH)
 	save_path = add_commas(save_path, col_name)
 	gradually_insert(save_path, col_name)
+	# gradually_insert("../data/stringified_new.csv", "str")
