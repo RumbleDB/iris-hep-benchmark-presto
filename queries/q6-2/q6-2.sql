@@ -97,9 +97,9 @@ CREATE TABLE memory.cern.singular_system AS
 SELECT 
 	event, 
 	min_by(
-		ARRAY [m1, m2, m3], 
+		array_max( ARRAY [m1.btag, m2.btag, m3.btag] ), 
 		abs(172.5 - mass)
-	) AS jet_system
+	) AS btag
 FROM memory.cern.computed_system
 GROUP BY event;
 
@@ -108,17 +108,16 @@ GROUP BY event;
 SELECT
   CAST((
     CASE
-      WHEN jet.pt < 15 THEN 15
-      WHEN jet.pt > 40 THEN 40
-      ELSE jet.pt
-    END - 0.125) / 0.25 AS BIGINT) * 0.25 + 0.125 AS x,
+      WHEN btag < 0 THEN 0
+      WHEN btag > 1 THEN 1
+      ELSE btag
+    END - 0.005) / 0.01 AS BIGINT) * 0.01 + 0.005 AS x,
   COUNT(*) AS y
   FROM memory.cern.singular_system
-  CROSS JOIN UNNEST(jet_system) AS jet
   GROUP BY CAST((
     CASE
-      WHEN jet.pt < 15 THEN 15
-      WHEN jet.pt > 40 THEN 40
-      ELSE jet.pt
-    END - 0.125) / 0.25 AS BIGINT) * 0.25 + 0.125
+      WHEN btag < 0 THEN 0
+      WHEN btag > 1 THEN 1
+      ELSE btag
+    END - 0.005) / 0.01 AS BIGINT) * 0.01 + 0.005
   ORDER BY x;
