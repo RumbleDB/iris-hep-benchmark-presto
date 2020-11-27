@@ -28,6 +28,24 @@ FROM memory.cern.unnested_jets;
 CREATE TABLE memory.cern.pt_sums AS
 SELECT event, SUM(j.pt) AS pt_sum
 FROM memory.cern.filtered_particles
-WHERE (filtered_electron_count = 0 OR filtered_electron_count = null) AND (filtered_muon_count = 0 OR filtered_muon_count = null)
+WHERE filtered_electron_count = 0 AND filtered_muon_count = 0 
 GROUP BY event;
 
+
+-- Compute the histogram
+SELECT
+  CAST((
+    CASE
+      WHEN pt_sum < 15 THEN 15
+      WHEN pt_sum > 200 THEN 200
+      ELSE pt_sum
+    END - 0.925) / 1.85 AS BIGINT) * 1.85 + 0.925 AS x,
+  COUNT(*) AS y
+  FROM memory.cern.pt_sums
+  GROUP BY CAST((
+    CASE
+      WHEN pt_sum < 15 THEN 15
+      WHEN pt_sum > 200 THEN 200
+      ELSE pt_sum
+    END - 0.925) / 1.85 AS BIGINT) * 1.85 + 0.925
+  ORDER BY x;
