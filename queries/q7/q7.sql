@@ -31,8 +31,6 @@ SELECT
 FROM memory.cern.unnested_jets;
 
 
-SELECT * FROM memory.cern.filtered_particles;
-
 -- Compute the per event jet.pt sums for the remaining jets
 CREATE TABLE memory.cern.pt_sums AS
 SELECT event, SUM(j.pt) AS pt_sum
