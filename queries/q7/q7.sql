@@ -13,16 +13,25 @@ FROM memory.cern.view
 CROSS JOIN UNNEST(Jets) WITH ORDINALITY AS j (pt, eta, phi, mass, puId, btag, idx)
 WHERE j.pt > 30;
 
+SELECT event, typeof(Electrons), typeof(Muons) FROM memory.cern.unnested_jets LIMIT 100;
 
 -- Create the tables which hold the jet-other_particle pairs
 CREATE TABLE memory.cern.filtered_particles AS
 SELECT 
 	event, 
-	j, 
-	cardinality(filter(Electrons, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 40)) AS filtered_electron_count,
-	cardinality(filter(Muons, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 40)) AS filtered_muon_count
+	j,
+	COALESCE( 
+		cardinality(filter(Electrons, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 40) ),
+		0
+	) AS filtered_electron_count,
+	COALESCE(
+		cardinality(filter(Muons, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 40) ),
+		0
+	) AS filtered_muon_count
 FROM memory.cern.unnested_jets;
 
+
+SELECT * FROM memory.cern.filtered_particles;
 
 -- Compute the per event jet.pt sums for the remaining jets
 CREATE TABLE memory.cern.pt_sums AS
