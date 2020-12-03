@@ -3,13 +3,14 @@
 # Setting up some useful parameters
 host=localhost
 port=8080
+catalog=memory
+output_format=CSV_HEADER
+presto_jar=/home/dan/data/software/presto-client/presto.jar
 
-
-if [[ $# != 2 ]]
+if [[ $# != 1 ]]
 then
-	echo "Usage: run_presto.sh <catalog> <sql_file>"
+	echo "Usage: run_presto.sh <sql_file>"
 	exit 1 	
 fi
 
-presto_jar=/home/dan/data/software/presto-client/presto.jar
-$presto_jar --server ${host}:${port} --catalog $1 --schema default --file $2
+$presto_jar --server ${host}:${port} --catalog ${catalog} --schema default --output-format ${output_format} --file $1
