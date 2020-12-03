@@ -1,107 +1,95 @@
+import argparse
 import pandas
 import re
 import os
-
 from os.path import join
 from os import getcwd
 from subprocess import run
 
-# CSV_PATH = '/home/dan/data/garbage/cern_queries/presto/data/Run2012B_SingleMu_small.parquet'
-CSV_PATH = '/home/dan/data/garbage/ingo_cern_test/cern-rumble-queries/data/Run2012B_SingleMu-1000.parquet'
-TABLE_NAME = "memory.cern.Run2012B_SingleMu_small"
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--csv", type=str, default="../data/Run2012B_SingleMu-1000.parquet", 
+    help="Path to the CSV containing the entries")
+parser.add_argument("--table", type=str, default="memory.cern.Run2012B_SingleMu_small", 
+    help="The name of the table into which the entries are inserted")
+parser.add_argument("--col_name", type=str, default="str", 
+    help="The name of the column where the stringified row is temporarily stored.")
+parser.add_argument("--out_dir", type=str, default="../data", 
+    help="The path to the directory where the intermediary outputs of the script are stored.")
+parser.add_argument("--use_cached", type=bool, default=False, 
+    help="If false, the script executes the entire conversion process from parquet to CSV" \
+        "before inserting. Otherwise it uses the results of a previous run.")
+parser.add_argument("--cached_path", type=str, default="../data/stringified_new.csv", 
+    help="Specifies the location of the cached data. Only used if --cached_path=True.")
+parser.add_argument("--catalog", type=str, default="memory", 
+    help="Specifies the catalog to which the table is added.")
+parser.add_argument("--dump_count", type=int, default=400, 
+    help="The number of instances to be inserted into the table at each SQL INSERT.")
+parser.add_argument("--presto_script", type=str, default="run_presto.sh", 
+    help="Path to the script which is used to execute commands over presto.")
 
 
-def make_sql_insert_script(path, col_name='str'):
-	data = pandas.read_csv(path)	
-	with open("insert_data.sql", "w") as f:
-		f.write("-- Insert data into the `companies` table\nINSERT INTO {} VALUES\n".format(TABLE_NAME))
+def stringify_data(path, col_name="str", out_dir="../data", out_name="stringified.csv"):
+  # Create the folder where the data is saved
+  if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
+  out_path = join(out_dir, out_name)
 
-		for i, row in data.iterrows():
-			f.write(",\n\t(" + row[col_name] + ")" if i != 0 else "\t(" + row[col_name] + ")")
-
-		f.write(";")
-
-def gradually_insert(path, col_name='str', catalog='memory', dump_count=400):
-	"""
-	Gradually inserts the rows in the DF located at path. The rows
-	should already be concatenated together into a string under 
-	the column col_name.
-
-	:param path: the path to the DF
-	:param col_name: the column under which the stringified rows are
-					 located
-	:param catalog: the presto catalog which will be used
-	"""
-	def _execute_command(q):
-		with open("temp.sql", "w") as f:
-			f.write(collector)
-		run(['./run_presto.sh', catalog, "temp.sql"])  
-
-	data = pandas.read_csv(path)
-	collector = cl = "INSERT INTO {} VALUES".format(TABLE_NAME) 
-
-	for i, row in data.iterrows():
-		if i % dump_count == 0 and i != 0:
-			print("At row:", i)
-			collector += " (" + row[col_name] + ");"
-			_execute_command(collector)
-			collector = cl 
-		else:
-			collector += " (" + row[col_name] + "),"
-
-	# if there some extra rows that need to be added
-	if collector != cl:
-		collector = collector[:-1] + ";"
-		_execute_command(collector)
+  data = pandas.read_parquet(path)
+  data[col_name] = data[data.columns].astype(str).apply(lambda x: ', '.join(x), axis=1)
+  data.to_csv(out_path, index=False)
+  return col_name, out_path
 
 
-def stringify_data(path, col_name="str", out_path="../data", out_name="stringified.csv"):
-	"""
-	Read a parquet file as a DF, and add a new column whose name is specified  
-	in the col_name parameter. This column holds the row's other columns 
-	under concatenated string format. The new DF is saved under the name 
-	indicated by out_name. 
+def add_commas(path, col_name="str", out_dir="../data", out_name="stringified_new.csv"):
+  def _inner_transform(x):
+    x = re.sub(' +', ',', x)
+    x = re.sub(",+", ",", x)
+    x = re.sub("\[,", "[", x)
+    x = re.sub(",\]", "]", x)
+    x = re.sub("nan", "null", x)
+    return re.sub("\[", "ARRAY[", x)
 
-	:param path: the path to the DF
-	:param col_name: the name of the new column
-	:param out_name: the name of the output csv
-	"""
-	# Create the folder where the data is saved
-	if not os.path.exists(out_path):
-		os.mkdir(out_path)
-	save_path = join(out_path, out_name)
-
-	data = pandas.read_parquet(path)
-	data[col_name] = data[data.columns].astype(str).apply(lambda x: ', '.join(x), axis=1)
-	data.to_csv(save_path, index=False)
-	return col_name, save_path
+  data = pandas.read_csv(path)
+  data[col_name] = data[col_name].apply(_inner_transform)
+  out_path = join(out_dir, out_name)
+  data.to_csv(out_path, index=False)
+  return out_path
 
 
-def add_commas(path, col_name="str", out_name="../data/stringified_new.csv"):
-	"""
-	Processes the stringified rows, and makes sure the data is in a format 
-	that presto accepts when inserting.
+def gradually_insert(path, col_name='str', catalog='memory', dump_count=400, 
+  table_name="memory.cern.Run2012B_SingleMu_small", presto_script="../run_presto.sh"):
+  def _execute_command(q):
+    with open("temp.sql", "w") as f:
+      f.write(collector)
+    run([f"./{presto_script}", catalog, "temp.sql"])  
 
-	:param path: the path to the DF
-	:param col_name: the name of the column with the stringified data 
-	:param out_name: the name of the output csv
-	"""
-	def _inner_transform(x):
-		x = re.sub(' +', ',', x)
-		x = re.sub(",+", ",", x)
-		x = re.sub("\[,", "[", x)
-		x = re.sub(",\]", "]", x)
-		x = re.sub("nan", "null", x)
-		return re.sub("\[", "ARRAY[", x)
+  data = pandas.read_csv(path)
+  collector = cl = "INSERT INTO {} VALUES".format(table_name) 
 
-	data = pandas.read_csv(path)
-	data[col_name] = data[col_name].apply(_inner_transform)
-	data.to_csv(out_name, index=False)
-	return out_name
+  for i, row in data.iterrows():
+    if i % dump_count == 0 and i != 0:
+      print("At row:", i)
+      collector += " (" + row[col_name] + ");"
+      _execute_command(collector)
+      collector = cl 
+    else:
+      collector += " (" + row[col_name] + "),"
+
+  # if there some extra rows that need to be added
+  if collector != cl:
+    collector = collector[:-1] + ";"
+    _execute_command(collector)
 
 
 if __name__ == '__main__':
-	col_name, save_path = stringify_data(CSV_PATH)
-	save_path = add_commas(save_path, col_name)
-	gradually_insert(save_path, col_name)
-	# gradually_insert("../data/stringified_new.csv", "str")
+  args = parser.parse_args()
+
+  if args.use_cached:
+    gradually_insert(args.cached_path, col_name=args.col_name, catalog=args.catalog, 
+        dump_count=args.dump_count, table_name=args.table, presto_script=args.presto_script)
+  else:
+    col_name, save_path = stringify_data(args.csv, col_name=args.col_name, out_dir=args.out_dir)
+    save_path = add_commas(save_path, col_name=col_name, out_dir=args.out_dir)
+    gradually_insert(save_path, col_name=col_name, catalog=args.catalog, dump_count=args.dump_count, 
+        table_name=args.table, presto_script=args.presto_script)
