@@ -35,6 +35,7 @@ def stringify_data(path, col_name="str", out_dir="../data", out_name="stringifie
     os.mkdir(out_dir)
   out_path = join(out_dir, out_name)
 
+  print("Data Path", path)
   data = pandas.read_parquet(path)
   data[col_name] = data[data.columns].astype(str).apply(lambda x: ', '.join(x), axis=1)
   data.to_csv(out_path, index=False)
@@ -57,12 +58,12 @@ def add_commas(path, col_name="str", out_dir="../data", out_name="stringified_ne
   return out_path
 
 
-def gradually_insert(path, col_name='str', catalog='memory', dump_count=400, 
-  table_name="memory.cern.Run2012B_SingleMu_small", presto_script="../run_presto.sh"):
+def gradually_insert(path, col_name='str', dump_count=400, 
+  table_name="memory.cern.Run2012B_SingleMu_small", presto_script="run_presto.sh"):
   def _execute_command(q):
     with open("temp.sql", "w") as f:
       f.write(collector)
-    run([f"./{presto_script}", catalog, "temp.sql"])  
+    run([f"./{presto_script}", "temp.sql"])  
 
   data = pandas.read_csv(path)
   collector = cl = "INSERT INTO {} VALUES".format(table_name) 
@@ -86,10 +87,10 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   if args.use_cached:
-    gradually_insert(args.cached_path, col_name=args.col_name, catalog=args.catalog, 
-        dump_count=args.dump_count, table_name=args.table, presto_script=args.presto_script)
+    gradually_insert(args.cached_path, col_name=args.col_name, dump_count=args.dump_count, 
+      table_name=args.table, presto_script=args.presto_script)
   else:
     col_name, save_path = stringify_data(args.csv, col_name=args.col_name, out_dir=args.out_dir)
     save_path = add_commas(save_path, col_name=col_name, out_dir=args.out_dir)
-    gradually_insert(save_path, col_name=col_name, catalog=args.catalog, dump_count=args.dump_count, 
+    gradually_insert(save_path, col_name=col_name, dump_count=args.dump_count, 
         table_name=args.table, presto_script=args.presto_script)

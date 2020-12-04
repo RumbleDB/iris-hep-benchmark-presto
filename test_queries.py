@@ -4,124 +4,93 @@ from abc import ABC, abstractmethod
 import io
 import json
 import logging
+from matplotlib import pyplot as plt
+import numpy as np
 from os.path import dirname, join
 import subprocess
 import sys
 import time
-from urllib.parse import quote_plus, urlencode
-import warnings
 
 import pandas as pd
 import pytest
 import requests
+from urllib.parse import quote_plus, urlencode
+import warnings
 
 
-class RumbleProxy(ABC):
-    @abstractmethod
-    def run(self, query_file, variables):
-        pass
+# This superclass might be useful in case other means
+# of querying Presto are added in the future 
+class PrestoProxy(ABC):
+  @abstractmethod
+  def run(self, query_file, other_params):
+    pass
 
 
-class RumbleCliProxy(RumbleProxy):
-    def __init__(self, cmd):
-        self.cmd = cmd
+class PrestoCliProxy(PrestoProxy):
+  def __init__(self, cmd):
+    self.cmd = cmd
 
-    def run(self, query_file, variables):
-        # Assemble command
-        cmd = [self.cmd]
-        for k, v in variables.items():
-            cmd += ['--variable:{k}'.format(k=k), v]
-        cmd += ['--query-path', query_file]
+  def run(self, query_file):
+    # Assemble command
+    cmd = [self.cmd, query_file]
 
-        # Run query and read result
-        output = subprocess.check_output(cmd, encoding='utf-8')
-
-        return json.loads(output)
+    # Run query and read result
+    output = subprocess.check_output(cmd, encoding='utf-8')
+    return io.StringIO(output)
 
 
-class RumbleServerProxy(RumbleProxy):
-    def __init__(self, server_uri):
-        self.server_uri = server_uri
-
-    def run(self, query_file, variables):
-        args = {'variable:' + quote_plus(k): quote_plus(v)
-                for k, v in variables.items()}
-        args['query-path'] = query_file
-        args_str = urlencode(args)
-
-        query_uri = '{server_uri}?{args}'.format(
-            server_uri=self.server_uri, args=args_str)
-        logging.info('Running query against %s', query_uri)
-        response = json.loads(requests.post(query_uri).text)
-
-        if 'warning' in response:
-            warning = json.dumps(response['warning'])
-            warnings.warn(warning, RuntimeWarning)
-
-        if 'values' in response:
-            return response['values']
-
-        if 'error-message' in response:
-            raise RuntimeError(response['error-message'])
-
-        raise RuntimeError(str(response))
+@pytest.fixture(scope="session")
+def setup_db(pytestconfig):
+  cmd = [
+      pytestconfig.getoption('script_path'), 
+      pytestconfig.getoption('input_path')
+  ]
+  logging.info('Running setup command %s', cmd[0])
+  logging.info('Using dataset %s', cmd[1])
+  subprocess.run(cmd)
+  return True
 
 
-@pytest.fixture
-def rumble(pytestconfig):
-    # Use server if provided
-    server_uri = pytestconfig.getoption('rumble_server')
-    if server_uri:
-        logging.info('Using server at %s', server_uri)
-        return RumbleServerProxy(server_uri)
-
-    # Fall back to CLI
-    rumble_cmd = pytestconfig.getoption('rumble_cmd')
-    rumble_cmd = rumble_cmd or join(dirname(__file__), 'rumble.sh')
-    logging.info('Using executable %s', rumble_cmd)
-    return RumbleCliProxy(rumble_cmd)
+@pytest.fixture(scope="function")
+def presto(pytestconfig):
+  # By default use the CLI
+  presto_cmd = pytestconfig.getoption('presto_cmd')
+  logging.info('Using executable %s', presto_cmd)
+  return PrestoCliProxy(presto_cmd)
 
 
-def test_query(query_id, pytestconfig, rumble):
+def test_query(query_id, pytestconfig, presto, setup_db):
     num_events = pytestconfig.getoption('num_events')
     num_events = ('-' + str(num_events)) if num_events else ''
 
     root_dir = join(dirname(__file__))
     query_dir = join(root_dir, 'queries', query_id)
-    query_file = join(query_dir, 'query.jq')
+    query_file = join(query_dir, 'query.sql')
     ref_file = join(query_dir, 'ref{}.csv'.format(num_events))
     png_file = join(query_dir, 'plot{}.png'.format(num_events))
 
-    # Assemble variables
-    variables = {}
-
-    input_path = pytestconfig.getoption('input_path')
-    input_path = input_path or \
-        join(root_dir, 'data',
-             'Run2012B_SingleMu{}.parquet'.format(num_events))
-    variables['input-path'] = input_path
-
     # Run query and read result
     start_timestamp = time.time()
-    output = rumble.run(query_file, variables)
+    output = presto.run(query_file)
     end_timestamp = time.time()
-    df = pd.DataFrame.from_records(output)
+    df = pd.read_csv(output, dtype= {'x': np.float64, 'y': np.int32})
+    print(df)
 
     running_time = end_timestamp - start_timestamp
     logging.info('Running time: {:.2f}s'.format(running_time))
 
     # Freeze reference result
     if pytestconfig.getoption('freeze_result'):
-        df.to_csv(ref_file, sep=',', index=False)
+      df.to_csv(ref_file, index=False)
 
     # Read reference result
-    df_ref = pd.read_csv(ref_file, sep=',')
+    df_ref = pd.read_csv(ref_file, dtype= {'x': np.float64, 'y': np.int32})
+    print(df_ref)
 
     # Plot histogram
     if pytestconfig.getoption('plot_histogram'):
-        from matplotlib import pyplot as plt
-        plt.hist(df.x, bins=len(df.index), weights=df.y)
-        plt.savefig(png_file)
+      plt.hist(df.x, bins=len(df.index), weights=df.y)
+      plt.savefig(png_file)
 
     # Normalize reference and query result
     df = df[df.y > 0]

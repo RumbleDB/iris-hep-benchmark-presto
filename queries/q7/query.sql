@@ -13,8 +13,6 @@ FROM memory.cern.view
 CROSS JOIN UNNEST(Jets) WITH ORDINALITY AS j (pt, eta, phi, mass, puId, btag, idx)
 WHERE j.pt > 30;
 
-SELECT event, typeof(Electrons), typeof(Muons) FROM memory.cern.unnested_jets LIMIT 100;
-
 -- Create the tables which hold the jet-other_particle pairs
 CREATE TABLE memory.cern.filtered_particles AS
 SELECT 
