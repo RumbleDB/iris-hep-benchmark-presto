@@ -2,30 +2,104 @@
 
 ## Introduction
 
-This repository hosts the queries described [here](https://github.com/iris-hep/adl-benchmarks-index). The queries are written in SQL for [Presto](https://prestosql.io/). As its name suggests, the Presto version is meant to be run with Presto and any back end storage system it supports (although it was currently only tested for the *memory* back end). As part of this project we are trying to study the limitations of various flavors of the SQL query language.
-
-Presto is a framework which provides a unified front-end to a set of data store technologies such as Cassandra or HDFS. It allows querying using a proprietary version of SQL.
+This repository hosts a set of queries described at high-level [here](https://github.com/iris-hep/adl-benchmarks-index). The queries are written in SQL for [Presto](https://prestosql.io/). Presto offers a unified front-end to a set of data store technologies such as Cassandra or HDFS. As part of its query interface, it uses a proprietary version of SQL. 
 
 ## Installation
 
 To install the Presto server, follow these [instructions](https://prestodb.io/docs/current/installation/deployment.html). You then need to follow these [instructions](https://prestodb.io/docs/current/installation/cli.html) in order to set up a Presto client.
 
-Since deploying the Presto server can involve quite a bit of configuration file management, this repository contains an instance of the `etc` folder required for deployment. This can be found in `presto/server_config/etc.zip`. Make sure to change the `node.data-dir` property in `etc/node.properties`. Also, you might want to change the IP and port in `etc/function-namespace/memory.properties` such that it fits to your `mysql` configuration. This configuration features only one catalog: `memory`. Naturally, more can be added, however, the next sections in the tutorial will make the assumption that `memory` is used.
+Since deploying the Presto server can involve quite a bit of configuration, we provide a pre-configured `etc` folder which can be from downloaded [here](https://polybox.ethz.ch/index.php/s/TuCtNXTH7XQg0t5/download). Make sure to change the `node.data-dir` property in `etc/node.properties`. Also, you might want to change the IP and port in `etc/function-namespace/memory.properties` such that it fits to your `mysql` configuration. This configuration features only one catalog: `memory`. Naturally, more can be added. It should be mentioned, however, that for testing these queries, we have currently only used the `memory` catalog.
 
-## The Data
+## Setting up the environment
 
-The `presto/scripts` folder contains a number of scripts which are useful towards building a database. It is generally also a good idea to add this folder to the `PATH` variable, as it makes executing queries more straight forward. In order to set up the CERN database, one should follow the next instructions:
+The `scripts` folder contains a number of scripts which are useful towards building a database. It is generally also a good idea to add this folder to the `PATH` variable, as it makes executing queries more straight forward. In order to set up the CERN database, one should follow the next instructions:
 
 1. Start the Presto server
-1. Execute `run_presto.sh memory make_db.sql`. This will create the schema, and the table structure.
-1. Execute `python csv_to_sql_insert.py`. This will insert the contents of the database to Presto. Make sure to look into this script, and change the paths, such that `CSV_PATH` points to your initial file location, and the `out_name` parameters point to valid output file locations.
-1. Execute `run_presto.sh memory create_view.sql`. This will create a view of the database, such that particles are encapsulated in `row` type entities.
+1. Run the `set_up_cern_environment.sh` script
 
-By following these queries, your Presto distribution should have the CERN database inserted in the memory catalog.
+The `set_up_cern_environment.sh` script is pre-configured to use the data in `data/Run2012B_SingleMu-1000.parquet`, however feel free to pass a different dataset (from the same CERN database) as a first parameter to this script.
+
+The `set_up_cern_environment.sh` script makes use of the following scripts (which can also be found in the `scripts` folder):
+
+* `run_presto.sh`: this script is used as a shorthand to submitting SQL queries to the Presto client. Make sure to set the values of the script variables such that it can work on your machine. The following are the variables which might need to be changed.
+	* `host`: the hostname of your Presto server deployment
+	* `port`: the port of your Presto server deployment
+	* `catalog`: by default this is `memory`
+	* `output_format`: by default this is `CSV_HEADER`, and should be left as such, unless you also change the references and the `pytest` script.
+	* `presto_jar`: the path to your Presto client jar.   
+* `run_presto.sh memory make_db.sql`: this will create the schema, and the table structure.
+* `memory create_view.sql`: this will create a view of the database, such that particles are encapsulated in `row` type entities.
+* `csv_to_sql_insert.py`: this will insert the contents of the database to Presto. The script offers the following options:
+
+```
+$python csv_to_sql_insert.py -h
+usage: csv_to_sql_insert.py [-h] [--csv CSV] [--table TABLE]
+                            [--col_name COL_NAME] [--out_dir OUT_DIR]
+                            [--use_cached USE_CACHED]
+                            [--cached_path CACHED_PATH] [--catalog CATALOG]
+                            [--dump_count DUMP_COUNT]
+                            [--presto_script PRESTO_SCRIPT]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --csv CSV             Path to the CSV containing the entries
+  --table TABLE         The name of the table into which the entries are
+                        inserted
+  --col_name COL_NAME   The name of the column where the stringified row is
+                        temporarily stored.
+  --out_dir OUT_DIR     The path to the directory where the intermediary
+                        outputs of the script are stored.
+  --use_cached USE_CACHED
+                        If false, the script executes the entire conversion
+                        process from parquet to CSVbefore inserting. Otherwise
+                        it uses the results of a previous run.
+  --cached_path CACHED_PATH
+                        Specifies the location of the cached data. Only used
+                        if --cached_path=True.
+  --catalog CATALOG     Specifies the catalog to which the table is added.
+  --dump_count DUMP_COUNT
+                        The number of instances to be inserted into the table
+                        at each SQL INSERT.
+  --presto_script PRESTO_SCRIPT
+                        Path to the script which is used to execute commands
+                        over presto.
+```
+
+In case you need to change the default values, then make sure to make these changes in `set_up_cern_environment.sh`, in the line calling `csv_to_sql_insert.py`.
 
 ## Running Queries
 
-Make sure the `presto/scripts` folder is added to the `PATH` variable. This will make running queries straight forward. Assuming this step has been done, all one needs to do is to navigate to a query folder (e.g. `presto/queries/q1`) and execute a query with the following structure `run_presto.sh memory <query_file_name>`.
+To run the queries, you need to run the `run_presto.sh <path-to-query>` command. The `run_presto.sh` script can be found in the `script` directory.
+
+## Testing the Correctness of the Queries
+
+The repository offers a test suite which checks the output of the queries against a set of reference results. These reference results can be found in each query folder, and have the name `ref-1000.csv`. 
+
+The tests can be executed using the `test_queries.py` script located in the root directory. In addition to the default `pytest` options, it offers the following arguments:
+
+```
+$python test_queries.py -h  
+[...]
+  -Q QUERY_ID, --query-id=QUERY_ID
+                        Folder name of query to run.
+  -F FREEZE_RESULT, --freeze-result=FREEZE_RESULT
+                        Whether the results of the query should be persisted to disk.
+  -N NUM_EVENTS, --num-events=NUM_EVENTS
+                        Number of events taken from the input file. This influences which reference file
+                        should be taken.
+  -I INPUT_PATH, --input-path=INPUT_PATH
+                        Path to input ROOT file.
+  -S SCRIPT_PATH, --script-path=SCRIPT_PATH
+                        Path to the script which sets up the DB.
+  -P PRESTO_CMD, --presto-cmd=PRESTO_CMD
+                        Path to the script which sets up the DB.
+  --plot-histogram      Plot resulting histogram as PNG file.
+
+```
+
+To run all queries one should use the command `python test_queries.py -v`. To run a specific query, one can use `python test_queries.py -Q <path-to-query-folder>`. 
+
+When running tests, you do not need to run the `set_up_cern_environment.sh` beforehand. This is automatically executed at the beginning of the tests. <span style="color:red">Note that the Presto server must be started prior to running the tests!</span>.
 
 ## Known Execution Issues
 
