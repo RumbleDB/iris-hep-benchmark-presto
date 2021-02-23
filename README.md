@@ -22,11 +22,11 @@ The `set_up_cern_environment.sh` script is pre-configured to use the data in `da
 The `set_up_cern_environment.sh` script makes use of the following scripts (which can also be found in the `scripts` folder):
 
 * `run_presto.sh`: this script is used as a shorthand to submitting SQL queries to the Presto client. Make sure to set the values of the script variables such that it can work on your machine. The following are the variables which might need to be changed.
-	* `host`: the hostname of your Presto server deployment
-	* `port`: the port of your Presto server deployment
-	* `catalog`: by default this is `memory`
-	* `output_format`: by default this is `CSV_HEADER`, and should be left as such, unless you also change the references and the `pytest` script
-	* `presto_jar`: the path to your Presto client jar 
+  * `host`: the hostname of your Presto server deployment
+  * `port`: the port of your Presto server deployment
+  * `catalog`: by default this is `memory`
+  * `output_format`: by default this is `CSV_HEADER`, and should be left as such, unless you also change the references and the `pytest` script
+  * `presto_jar`: the path to your Presto client jar
 * `run_presto.sh memory make_db.sql`: this will create the schema, and the table structure.
 * `memory create_view.sql`: this will create a view of the database, such that particles are encapsulated in `ROW` type entities.
 * `csv_to_sql_insert.py`: this will insert the contents of the database to Presto. The script offers the following options:
@@ -97,7 +97,7 @@ $python test_queries.py -h
 
 ```
 
-To run all queries one should use the command `python test_queries.py -v`. To run a specific query, one can use `python test_queries.py -Q <path-to-query-folder>`. 
+To run all queries one should use the command `python test_queries.py -v`. To run a specific query, one can use `python test_queries.py -Q <path-to-query-folder>`.
 
 When running tests, you do not need to run the `set_up_cern_environment.sh` beforehand. This is automatically executed at the beginning of the tests. <font color='red'>Note that the Presto server must be started prior to running the tests!</font>
 
@@ -105,4 +105,4 @@ When running tests, you do not need to run the `set_up_cern_environment.sh` befo
 
 * When starting the Presto server, one might see an error of the following sort: `ERROR	main com.facebook.presto.server.PrestoServer	No factory for function namespace manager mysql`, with the top of the stack trace indicating `java.lang.IllegalStateException: No factory for function namespace manager mysql`. Even if `mysql` is selected in the `etc/function-namespace/memory.properties` configuration file, this error can unexpectedly occur. To fix this, it is indicated to use the latest version of Presto server. This was tested on `presto-server-334` and indeed no error was reported.
 
-* Note that Presto has no dedicated means of importing a `.csv` file (see [here](https://github.com/prestodb/presto/issues/11055)). This is the reason why the addition of `.csv` data is done manually using SQL `INSERT` operations. 
+* Note that Presto has no dedicated means of importing a `.csv` file (see [here](https://github.com/prestodb/presto/issues/11055)). This is the reason why the addition of `.csv` data is done manually using SQL `INSERT` operations.

@@ -19,7 +19,7 @@ import warnings
 
 
 # This superclass might be useful in case other means
-# of querying Presto are added in the future 
+# of querying Presto are added in the future
 class PrestoProxy(ABC):
   @abstractmethod
   def run(self, query_file, other_params):
@@ -42,7 +42,7 @@ class PrestoCliProxy(PrestoProxy):
 @pytest.fixture(scope="session")
 def setup_db(pytestconfig):
   cmd = [
-      pytestconfig.getoption('script_path'), 
+      pytestconfig.getoption('script_path'),
       pytestconfig.getoption('input_path')
   ]
   logging.info('Running setup command %s', cmd[0])

@@ -2,13 +2,13 @@
 data_path="../data/Run2012B_SingleMu-1000.parquet"
 
 if [[ $# != 1 ]]; then
-	data=$1
+    data=$1
 fi
 
 # Change to the script directory
 cd "$(dirname "$0")"
 
-# Crete the schema, insert the data 
+# Crete the schema, insert the data
 ./run_presto.sh make_db.sql
 python3 csv_to_sql_insert.py --csv=${data_path}
 

@@ -3,23 +3,23 @@ DROP TABLE IF EXISTS electron_table;
 DROP TABLE IF EXISTS muon_table;
 
 CREATE TABLE IF NOT EXISTS jet_table AS
-SELECT event, 
+SELECT event,
   array_agg(
     CAST(
       ROW(
-        pt, 
-        eta, 
+        pt,
+        eta,
         phi,
-        mass, 
-        puId, 
+        mass,
+        puId,
         btag
-      ) 
+      )
       AS ROW(
-        pt DOUBLE, 
-        eta DOUBLE, 
-        phi DOUBLE, 
-        mass DOUBLE, 
-        puId BOOLEAN, 
+        pt DOUBLE,
+        eta DOUBLE,
+        phi DOUBLE,
+        mass DOUBLE,
+        puId BOOLEAN,
         btag DOUBLE
       )
     )
@@ -33,35 +33,35 @@ SELECT event,
   array_agg(
     CAST(
       ROW(
-        pt, 
-        eta, 
-        phi, 
-        mass, 
-        charge, 
-        pfRelIso03_all, 
-        dxy, 
-        dxyErr, 
-        dz, 
-        dzErr, 
-        cutBasedId, 
-        pfId, 
-        jetIdx, 
+        pt,
+        eta,
+        phi,
+        mass,
+        charge,
+        pfRelIso03_all,
+        dxy,
+        dxyErr,
+        dz,
+        dzErr,
+        cutBasedId,
+        pfId,
+        jetIdx,
         genPartIdx
       )
       AS ROW(
-        pt DOUBLE, 
+        pt DOUBLE,
         eta DOUBLE,
-        phi DOUBLE, 
-        mass DOUBLE, 
-        charge INTEGER, 
-        pfRelIso03_all DOUBLE, 
-        dxy DOUBLE, 
-        dxyErr DOUBLE, 
-        dz DOUBLE, 
-        dzErr DOUBLE, 
-        cutBasedId BOOLEAN, 
-        pfId BOOLEAN, 
-        jetIdx INTEGER, 
+        phi DOUBLE,
+        mass DOUBLE,
+        charge INTEGER,
+        pfRelIso03_all DOUBLE,
+        dxy DOUBLE,
+        dxyErr DOUBLE,
+        dz DOUBLE,
+        dzErr DOUBLE,
+        cutBasedId BOOLEAN,
+        pfId BOOLEAN,
+        jetIdx INTEGER,
         genPartIdx INTEGER
       )
     )
@@ -78,52 +78,52 @@ SELECT event,
   array_agg(
     CAST(
       ROW(
-        pt, 
-        eta, 
-        phi, 
-        mass, 
-        charge, 
-        pfRelIso03_all, 
-        pfRelIso04_all, 
-        tightId, 
-        softId, 
-        dxy, 
+        pt,
+        eta,
+        phi,
+        mass,
+        charge,
+        pfRelIso03_all,
+        pfRelIso04_all,
+        tightId,
+        softId,
+        dxy,
         dxyErr,
-        dz, 
-        dzErr, 
-        jetIdx, 
+        dz,
+        dzErr,
+        jetIdx,
         genPartIdx
       )
       AS ROW(
-        pt DOUBLE, 
-        eta DOUBLE, 
-        phi DOUBLE, 
-        mass DOUBLE, 
-        charge INTEGER, 
-        pfRelIso03_all DOUBLE, 
-        pfRelIso04_all DOUBLE, 
-        tightId BOOLEAN, 
-        softId BOOLEAN, 
-        dxy DOUBLE, 
+        pt DOUBLE,
+        eta DOUBLE,
+        phi DOUBLE,
+        mass DOUBLE,
+        charge INTEGER,
+        pfRelIso03_all DOUBLE,
+        pfRelIso04_all DOUBLE,
+        tightId BOOLEAN,
+        softId BOOLEAN,
+        dxy DOUBLE,
         dxyErr DOUBLE,
-        dz DOUBLE, 
-        dzErr DOUBLE, 
-        jetIdx INTEGER, 
+        dz DOUBLE,
+        dzErr DOUBLE,
+        jetIdx INTEGER,
         genPartIdx INTEGER
 
       )
     )
   ) AS Muon
 FROM memory.cern.run2012b_singlemu_small
-CROSS JOIN UNNEST(Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge, Muon_pfRelIso03_all, Muon_pfRelIso04_all,  
+CROSS JOIN UNNEST(Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge, Muon_pfRelIso03_all, Muon_pfRelIso04_all,
         Muon_tightId, Muon_softId, Muon_dxy, Muon_dxyErr, Muon_dz, Muon_dzErr, Muon_jetIdx, Muon_genPartIdx)
-      AS t (pt, eta, phi, mass, charge, pfRelIso03_all, pfRelIso04_all, tightId, softId, dxy, dxyErr, dz, dzErr, 
+      AS t (pt, eta, phi, mass, charge, pfRelIso03_all, pfRelIso04_all, tightId, softId, dxy, dxyErr, dz, dzErr,
         jetIdx, genPartIdx)
 GROUP BY event;
 
 CREATE OR REPLACE VIEW memory.cern.view AS
-SELECT 
-  main.event, 
+SELECT
+  main.event,
   main.run,
   main.luminosityBlock,
   main.HLT_IsoMu24_eta2p,
@@ -144,7 +144,7 @@ SELECT
   main.nPhoton,
   main.nElectron,
   Electron AS Electrons,
-  main.nMuon, 
+  main.nMuon,
   Muon AS Muons,
   main.nJet,
   Jet AS Jets
