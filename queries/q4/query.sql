@@ -6,7 +6,7 @@ SELECT
       ELSE MET_sumet
     END - 10) / 20 AS BIGINT) * 20 + 10 AS x,
   COUNT(*) AS y
-FROM memory.cern.view
+FROM {input_table}
 WHERE cardinality(filter(Jets, x -> x.pt > 40)) > 1
 GROUP BY CAST((
     CASE

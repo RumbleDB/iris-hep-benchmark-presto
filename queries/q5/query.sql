@@ -1,6 +1,6 @@
 WITH temp AS (
   SELECT event, MET_sumet, COUNT(*)
-  FROM memory.cern.view
+  FROM {input_table}
   CROSS JOIN UNNEST(Muons) WITH ORDINALITY AS m1 (pt, eta, phi, mass, charge, pfRelIso03_all,
     pfRelIso04_all, tightId, softId, dxy, dxyErr, dz, dzErr, jetIdx, genPartIdx, idx)
   CROSS JOIN UNNEST(Muons) WITH ORDINALITY AS m2 (pt, eta, phi, mass, charge, pfRelIso03_all,

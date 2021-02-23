@@ -6,7 +6,7 @@ SELECT
       ELSE MET_sumet
     END - 10) / 20 AS BIGINT) * 20 + 10 AS x,
   COUNT(*) AS y
-FROM memory.cern.view
+FROM {input_table}
 GROUP BY CAST((
     CASE
       WHEN MET_sumet < 0 THEN 0

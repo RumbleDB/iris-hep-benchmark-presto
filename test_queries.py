@@ -30,25 +30,15 @@ class PrestoCliProxy(PrestoProxy):
   def __init__(self, cmd):
     self.cmd = cmd
 
-  def run(self, query_file):
+  def run(self, query):
     # Assemble command
-    cmd = [self.cmd, query_file]
+    cmd = [self.cmd,
+           '--file', '/dev/stdin',
+           '--output-format', 'CSV_HEADER']
 
     # Run query and read result
-    output = subprocess.check_output(cmd, encoding='utf-8')
+    output = subprocess.check_output(cmd, encoding='utf-8', input=query)
     return io.StringIO(output)
-
-
-@pytest.fixture(scope="session")
-def setup_db(pytestconfig):
-  cmd = [
-      pytestconfig.getoption('script_path'),
-      pytestconfig.getoption('input_path')
-  ]
-  logging.info('Running setup command %s', cmd[0])
-  logging.info('Using dataset %s', cmd[1])
-  subprocess.run(cmd)
-  return True
 
 
 @pytest.fixture(scope="function")
@@ -59,9 +49,13 @@ def presto(pytestconfig):
   return PrestoCliProxy(presto_cmd)
 
 
-def test_query(query_id, pytestconfig, presto, setup_db):
+def test_query(query_id, pytestconfig, presto):
     num_events = pytestconfig.getoption('num_events')
     num_events = ('-' + str(num_events)) if num_events else ''
+
+    input_table = pytestconfig.getoption('input_table')
+    input_table = input_table or \
+        'Run2012B_SingleMu{}'.format(num_events.replace('-','_'))
 
     root_dir = join(dirname(__file__))
     query_dir = join(root_dir, 'queries', query_id)
@@ -69,9 +63,16 @@ def test_query(query_id, pytestconfig, presto, setup_db):
     ref_file = join(query_dir, 'ref{}.csv'.format(num_events))
     png_file = join(query_dir, 'plot{}.png'.format(num_events))
 
+    # Read query
+    with open(query_file, 'r') as f:
+        query = f.read()
+    query = query.format(
+        input_table=input_table,
+    )
+
     # Run query and read result
     start_timestamp = time.time()
-    output = presto.run(query_file)
+    output = presto.run(query)
     end_timestamp = time.time()
     df = pd.read_csv(output, dtype= {'x': np.float64, 'y': np.int32})
     print(df)

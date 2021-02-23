@@ -11,12 +11,8 @@ def pytest_addoption(parser):
                    help='Number of events taken from the input file. '
                         'This influences which reference file should be '
                         'taken.')
-  parser.addoption('-I', '--input-path', action='store',
-                   default="data/Run2012B_SingleMu-1000.parquet",
-                   help='Path to input ROOT file.')
-  parser.addoption('-S', '--script-path', action='store',
-                   default="scripts/set_up_cern_environment.sh",
-                   help='Path to the script which sets up the DB.')
+  parser.addoption('-I', '--input-table', action='store',
+                   help='Name of input table or view.')
   parser.addoption('-P', '--presto-cmd', action='store',
                    default="scripts/run_presto.sh",
                    help='Path to the script which sets up the DB.')

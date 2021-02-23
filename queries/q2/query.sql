@@ -6,7 +6,7 @@ SELECT
       ELSE jet
     END - 0.225) / 0.45 AS BIGINT) * 0.45 + 0.225 AS x,
   COUNT(*) AS y
-FROM memory.cern.Run2012B_SingleMu_small
+FROM {input_table}
 CROSS JOIN UNNEST(Jet_pt) AS t (jet)
 GROUP BY CAST((
     CASE

@@ -19,7 +19,7 @@ SELECT
             x -> CAST( ROW(x.pt, x.eta, x.phi, x.mass, x.charge, 'e') AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, charge INTEGER, type CHAR ) )
         )
     ) AS Leptons
-FROM memory.cern.view
+FROM {input_table}
 WHERE nMuon + nElectron > 2;
 
 
