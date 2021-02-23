@@ -1,12 +1,12 @@
 -- Remove any tables that might have been left from executing this query in the past
-DROP TABLE IF EXISTS memory.cern.uniform_structure_leptons;
-DROP TABLE IF EXISTS memory.cern.lepton_pairs;
-DROP TABLE IF EXISTS memory.cern.processed_pairs;
-DROP TABLE IF EXISTS memory.cern.other_max_pt;
+DROP VIEW IF EXISTS uniform_structure_leptons;
+DROP VIEW IF EXISTS lepton_pairs;
+DROP VIEW IF EXISTS processed_pairs;
+DROP VIEW IF EXISTS other_max_pt;
 
 
 -- Make the structure of Electrons and Muons uniform, and then union their arrays
-CREATE TABLE memory.cern.uniform_structure_leptons AS
+CREATE VIEW uniform_structure_leptons AS
 SELECT
     event,
     array_union(
@@ -24,7 +24,7 @@ WHERE nMuon + nElectron > 2;
 
 
 -- Create the Lepton pairs, transform the leptons using PtEtaPhiM2PxPyPzE and then sum the transformed leptons
-CREATE TABLE memory.cern.lepton_pairs AS
+CREATE VIEW lepton_pairs AS
 SELECT
     *,
     CAST(
@@ -38,14 +38,14 @@ SELECT
     ) AS l,
     idx1 AS l1_idx,
     idx2 AS l2_idx
-FROM memory.cern.uniform_structure_leptons
+FROM uniform_structure_leptons
 CROSS JOIN UNNEST(Leptons) WITH ORDINALITY AS l1 (pt1, eta1, phi1, mass1, charge1, type1, idx1)
 CROSS JOIN UNNEST(Leptons) WITH ORDINALITY AS l2 (pt2, eta2, phi2, mass2, charge2, type2, idx2)
 WHERE idx1 < idx2 AND type1 = type2 AND charge1 != charge2;
 
 
 -- Apply the PtEtaPhiM2PxPyPzE transformation on the particle pairs, then retrieve the one with the mass closest to 91.2 for each event
-CREATE TABLE memory.cern.processed_pairs AS
+CREATE VIEW processed_pairs AS
 SELECT
     event,
     min_by(
@@ -56,14 +56,14 @@ SELECT
         ),
         abs(91.2 - sqrt(l.e * l.e - l.x * l.x - l.y * l.y - l.z * l.z))
     ) AS system
-FROM memory.cern.lepton_pairs
+FROM lepton_pairs
 GROUP BY event;
 
 
 -- For each event get the max pt of the other leptons
-CREATE TABLE memory.cern.other_max_pt AS
+CREATE VIEW other_max_pt AS
 SELECT event, max(pt) AS pt
-FROM memory.cern.processed_pairs
+FROM processed_pairs
 CROSS JOIN UNNEST(system[3]) WITH ORDINALITY AS l (pt, eta, phi, mass, charge, type, idx)
 WHERE idx != system[1] AND idx != system[2]
 GROUP BY event;
@@ -78,7 +78,7 @@ SELECT
       ELSE pt
     END - 0.225) / 0.45 AS BIGINT) * 0.45 + 0.225 AS x,
   COUNT(*) AS y
-  FROM memory.cern.other_max_pt
+  FROM other_max_pt
   GROUP BY CAST((
     CASE
       WHEN pt < 15 THEN 15

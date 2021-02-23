@@ -1,13 +1,13 @@
 -- Remove any tables that might have been left from executing this query in the past
-DROP TABLE IF EXISTS memory.cern.tri_jets;
-DROP TABLE IF EXISTS memory.cern.expanded_tri_jet;
-DROP TABLE IF EXISTS memory.cern.condensed_tri_jet;
-DROP TABLE IF EXISTS memory.cern.computed_system;
-DROP TABLE IF EXISTS memory.cern.singular_system;
+DROP VIEW IF EXISTS tri_jets;
+DROP VIEW IF EXISTS expanded_tri_jet;
+DROP VIEW IF EXISTS condensed_tri_jet;
+DROP VIEW IF EXISTS computed_system;
+DROP VIEW IF EXISTS singular_system;
 
 
 -- Create the TriJet systems
-CREATE TABLE memory.cern.tri_jets AS
+CREATE VIEW tri_jets AS
 SELECT
     event,
     CAST( ROW( m1.pt, m1.eta, m1.phi, m1.mass, m1.btag ) AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, btag DOUBLE ) ) AS m1,
@@ -21,7 +21,7 @@ WHERE m1.idx < m2.idx AND m2.idx < m3.idx;
 
 
 -- Compute the PtEtaPhiM2PxPyPzE for each particle
-CREATE TABLE memory.cern.expanded_tri_jet AS
+CREATE VIEW expanded_tri_jet AS
 SELECT
     event,
     CAST(
@@ -54,11 +54,11 @@ SELECT
     m1 AS m1_particle,
     m2 AS m2_particle,
     m3 AS m3_particle
-FROM memory.cern.tri_jets;
+FROM tri_jets;
 
 
 -- Compute the AddPxPyPzE3 for each TriJet system
-CREATE TABLE memory.cern.condensed_tri_jet AS
+CREATE VIEW condensed_tri_jet AS
 SELECT
     event,
     m1.x + m2.x + m3.x AS x,
@@ -72,11 +72,11 @@ SELECT
     m1_particle AS m1,
     m2_particle AS m2,
     m3_particle AS m3
-FROM memory.cern.expanded_tri_jet;
+FROM expanded_tri_jet;
 
 
 -- Compute the PxPyPzE2PtEtaPhiM
-CREATE TABLE memory.cern.computed_system AS
+CREATE VIEW computed_system AS
 SELECT
     event,
     sqrt(x2 * y2) AS pt,
@@ -89,18 +89,18 @@ SELECT
     m1,
     m2,
     m3
-FROM memory.cern.condensed_tri_jet;
+FROM condensed_tri_jet;
 
 
 -- Find the system with the lowest mass
-CREATE TABLE memory.cern.singular_system AS
+CREATE VIEW singular_system AS
 SELECT
     event,
     min_by(
         array_max( ARRAY [m1.btag, m2.btag, m3.btag] ),
         abs(172.5 - mass)
     ) AS btag
-FROM memory.cern.computed_system
+FROM computed_system
 GROUP BY event;
 
 
@@ -113,7 +113,7 @@ SELECT
       ELSE btag
     END - 0.005) / 0.01 AS BIGINT) * 0.01 + 0.005 AS x,
   COUNT(*) AS y
-  FROM memory.cern.singular_system
+  FROM singular_system
   GROUP BY CAST((
     CASE
       WHEN btag < 0 THEN 0

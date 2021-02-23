@@ -1,8 +1,8 @@
-DROP TABLE IF EXISTS jet_table;
-DROP TABLE IF EXISTS electron_table;
-DROP TABLE IF EXISTS muon_table;
+DROP VIEW IF EXISTS jets;
+DROP VIEW IF EXISTS electrons;
+DROP VIEW IF EXISTS muons;
 
-CREATE TABLE IF NOT EXISTS jet_table AS
+CREATE VIEW jets AS
 SELECT event,
   array_agg(
     CAST(
@@ -28,7 +28,7 @@ FROM memory.cern.run2012b_singlemu_small
 CROSS JOIN UNNEST(Jet_pt, Jet_eta, Jet_phi, Jet_mass, Jet_puId, Jet_btag) AS t (pt, eta, phi, mass, puId, btag)
 GROUP BY event;
 
-CREATE TABLE IF NOT EXISTS electron_table AS
+CREATE VIEW electrons AS
 SELECT event,
   array_agg(
     CAST(
@@ -66,14 +66,14 @@ SELECT event,
       )
     )
   ) AS Electron
-FROM memory.cern.run2012b_singlemu_small
+FROM Run2012B_SingleMu_1000_shredded
 CROSS JOIN UNNEST(Electron_pt, Electron_eta, Electron_phi, Electron_mass, Electron_charge, Electron_pfRelIso03_all,
         Electron_dxy, Electron_dxyErr,  Electron_dz, Electron_dzErr, Electron_cutBasedId, Electron_pfId, Electron_jetIdx,
         Electron_genPartIdx)
       AS t (pt, eta, phi, mass, charge, pfRelIso03_all, dxy, dxyErr, dz, dzErr, cutBasedId, pfId, jetIdx, genPartIdx)
 GROUP BY event;
 
-CREATE TABLE IF NOT EXISTS muon_table AS
+CREATE VIEW muons AS
 SELECT event,
   array_agg(
     CAST(
@@ -149,6 +149,6 @@ SELECT
   main.nJet,
   Jet AS Jets
 FROM memory.cern.run2012b_singlemu_small AS main
-FULL JOIN jet_table AS j on main.event = j.event
-FULL JOIN electron_table AS e ON main.event = e.event
-FULL JOIN muon_table AS m ON main.event = m.event;
+FULL JOIN jets AS j on main.event = j.event
+FULL JOIN electrons AS e ON main.event = e.event
+FULL JOIN muons AS m ON main.event = m.event;
