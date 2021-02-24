@@ -7,7 +7,7 @@ SELECT
     END - 10) / 20 AS BIGINT) * 20 + 10 AS x,
   COUNT(*) AS y
 FROM {input_table}
-WHERE cardinality(filter(Jets, x -> x.pt > 40)) > 1
+WHERE cardinality(filter(Jet, x -> x.pt > 40)) > 1
 GROUP BY CAST((
     CASE
       WHEN MET.sumet < 0 THEN 0

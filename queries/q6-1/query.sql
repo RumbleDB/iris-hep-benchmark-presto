@@ -6,9 +6,9 @@ WITH tri_jets AS (
     CAST( ROW( m2.pt, m2.eta, m2.phi, m2.mass, m2.btag ) AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, btag DOUBLE ) ) AS m2,
     CAST( ROW( m3.pt, m3.eta, m3.phi, m3.mass, m3.btag ) AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, btag DOUBLE ) ) AS m3
   FROM {input_table}
-  CROSS JOIN UNNEST(Jets) WITH ORDINALITY AS m1 (pt, eta, phi, mass, puId, btag, idx)
-  CROSS JOIN UNNEST(Jets) WITH ORDINALITY AS m2 (pt, eta, phi, mass, puId, btag, idx)
-  CROSS JOIN UNNEST(Jets) WITH ORDINALITY AS m3 (pt, eta, phi, mass, puId, btag, idx)
+  CROSS JOIN UNNEST(Jet) WITH ORDINALITY AS m1 (pt, eta, phi, mass, puId, btag, idx)
+  CROSS JOIN UNNEST(Jet) WITH ORDINALITY AS m2 (pt, eta, phi, mass, puId, btag, idx)
+  CROSS JOIN UNNEST(Jet) WITH ORDINALITY AS m3 (pt, eta, phi, mass, puId, btag, idx)
   WHERE m1.idx < m2.idx AND m2.idx < m3.idx
 ),
 

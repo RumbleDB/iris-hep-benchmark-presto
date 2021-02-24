@@ -143,14 +143,9 @@ SELECT
            CovXX        REAL,
            CovXY        REAL,
            CovYY        REAL)) AS MET,
-  main.nTau,
-  main.nPhoton,
-  main.nElectron,
-  Electron AS Electrons,
-  main.nMuon,
-  Muon AS Muons,
-  main.nJet,
-  Jet AS Jets
+  COALESCE(Electron, ARRAY []) AS Electron,
+  COALESCE(Muon, ARRAY []) AS Muon,
+  COALESCE(Jet, ARRAY []) AS Jet
 FROM memory.cern.run2012b_singlemu_small AS main
 FULL JOIN jets AS j on main.event = j.event
 FULL JOIN electrons AS e ON main.event = e.event

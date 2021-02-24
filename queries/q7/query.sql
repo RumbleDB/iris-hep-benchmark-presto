@@ -4,7 +4,7 @@ WITH unnested_jets AS (
     *,
     CAST( ROW( j.pt, j.eta, j.phi, j.mass, j.idx ) AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, idx INTEGER ) ) AS j
   FROM {input_table}
-  CROSS JOIN UNNEST(Jets) WITH ORDINALITY AS j (pt, eta, phi, mass, puId, btag, idx)
+  CROSS JOIN UNNEST(Jet) WITH ORDINALITY AS j (pt, eta, phi, mass, puId, btag, idx)
   WHERE j.pt > 30
 ),
 
@@ -14,11 +14,11 @@ filtered_particles AS (
     event,
     j,
     COALESCE(
-      cardinality(filter(Electrons, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 40) ),
+      cardinality(filter(Electron, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 40) ),
       0
     ) AS filtered_electron_count,
     COALESCE(
-      cardinality(filter(Muons, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 40) ),
+      cardinality(filter(Muon, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 40) ),
       0
     ) AS filtered_muon_count
   FROM unnested_jets

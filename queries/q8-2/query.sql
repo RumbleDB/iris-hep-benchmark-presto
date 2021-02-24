@@ -5,16 +5,16 @@ WITH uniform_structure_leptons AS (
     MET,
     array_union(
       transform(
-        COALESCE(Muons, ARRAY []),
+        COALESCE(Muon, ARRAY []),
         x -> CAST( ROW(x.pt, x.eta, x.phi, x.mass, x.charge, 'm') AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, charge INTEGER, type CHAR ) )
       ),
       transform(
-        COALESCE(Electrons, ARRAY []),
+        COALESCE(Electron, ARRAY []),
         x -> CAST( ROW(x.pt, x.eta, x.phi, x.mass, x.charge, 'e') AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, charge INTEGER, type CHAR ) )
       )
     ) AS Leptons
   FROM {input_table}
-  WHERE nMuon + nElectron > 2
+  WHERE cardinality(Muon) + cardinality(Electron) > 2
 ),
 
 
