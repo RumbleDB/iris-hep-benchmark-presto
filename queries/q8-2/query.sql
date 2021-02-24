@@ -2,8 +2,7 @@
 WITH uniform_structure_leptons AS (
   SELECT
     event,
-    MET_pt,
-    MET_phi,
+    MET,
     array_union(
       transform(
         COALESCE(Muons, ARRAY []),
@@ -50,8 +49,8 @@ processed_pairs AS (
         l1_idx,
         l2_idx,
         Leptons,
-        MET_pt,
-        MET_phi
+        MET.pt,
+        MET.phi
       ),
       abs(91.2 - sqrt(l.e * l.e - l.x * l.x - l.y * l.y - l.z * l.z))
     ) AS system
