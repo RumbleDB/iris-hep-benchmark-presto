@@ -62,6 +62,7 @@ def test_query(query_id, pytestconfig, presto):
     query_file = join(query_dir, 'query.sql')
     ref_file = join(query_dir, 'ref{}.csv'.format(num_events))
     png_file = join(query_dir, 'plot{}.png'.format(num_events))
+    lib_file = join(root_dir, 'queries', 'common', 'functions.sql')
 
     # Read query
     with open(query_file, 'r') as f:
@@ -69,6 +70,11 @@ def test_query(query_id, pytestconfig, presto):
     query = query.format(
         input_table=input_table,
     )
+
+    # Read function library
+    with open(lib_file, 'r') as f:
+        lib = f.read()
+    query = lib + query
 
     # Run query and read result
     start_timestamp = time.time()

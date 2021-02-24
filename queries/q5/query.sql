@@ -14,18 +14,8 @@ WITH temp AS (
   HAVING COUNT(*) > 0
 )
 SELECT
-  CAST((
-    CASE
-      WHEN sumet < 0 THEN 0
-      WHEN sumet > 2000 THEN 2000
-      ELSE sumet
-    END - 10) / 20 AS BIGINT) * 20 + 10 AS x,
+  mysql.default.HistogramBin(sumet, 0, 2000, 100) AS x,
   COUNT(*) AS y
 FROM temp
-GROUP BY CAST((
-    CASE
-      WHEN sumet < 0 THEN 0
-      WHEN sumet > 2000 THEN 2000
-      ELSE sumet
-    END - 10) / 20 AS BIGINT) * 20 + 10
+GROUP BY mysql.default.HistogramBin(sumet, 0, 2000, 100)
 ORDER BY x;

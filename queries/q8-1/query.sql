@@ -71,18 +71,8 @@ other_max_pt AS (
 
 -- Compute the histogram
 SELECT
-  CAST((
-    CASE
-      WHEN pt < 15 THEN 15
-      WHEN pt > 250 THEN 250
-      ELSE pt
-    END - 1.175) / 2.35 AS BIGINT) * 2.35 + 1.175 AS x,
+  mysql.default.HistogramBin(pt, 15, 250, 100) AS x,
   COUNT(*) AS y
 FROM other_max_pt
-GROUP BY CAST((
-    CASE
-      WHEN pt < 15 THEN 15
-      WHEN pt > 250 THEN 250
-      ELSE pt
-    END - 1.175) / 2.35 AS BIGINT) * 2.35 + 1.175
+GROUP BY mysql.default.HistogramBin(pt, 15, 250, 100)
 ORDER BY x;

@@ -36,18 +36,8 @@ pt_sums AS (
 
 -- Compute the histogram
 SELECT
-  CAST((
-    CASE
-      WHEN pt_sum < 15 THEN 15
-      WHEN pt_sum > 200 THEN 200
-      ELSE pt_sum
-    END - 0.925) / 1.85 AS BIGINT) * 1.85 + 0.925 AS x,
+  mysql.default.HistogramBin(pt_sum, 15, 200, 100) AS x,
   COUNT(*) AS y
 FROM pt_sums
-GROUP BY CAST((
-    CASE
-      WHEN pt_sum < 15 THEN 15
-      WHEN pt_sum > 200 THEN 200
-      ELSE pt_sum
-    END - 0.925) / 1.85 AS BIGINT) * 1.85 + 0.925
+GROUP BY mysql.default.HistogramBin(pt_sum, 15, 200, 100)
 ORDER BY x;

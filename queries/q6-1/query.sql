@@ -103,19 +103,9 @@ singular_system AS (
 
 -- Generate the histogram
 SELECT
-  CAST((
-    CASE
-      WHEN jet.pt < 15 THEN 15
-      WHEN jet.pt > 40 THEN 40
-      ELSE jet.pt
-    END - 0.125) / 0.25 AS BIGINT) * 0.25 + 0.125 AS x,
+  mysql.default.HistogramBin(jet.pt, 15, 40, 100) AS x,
   COUNT(*) AS y
 FROM singular_system
 CROSS JOIN UNNEST(jet_system) AS jet
-GROUP BY CAST((
-    CASE
-      WHEN jet.pt < 15 THEN 15
-      WHEN jet.pt > 40 THEN 40
-      ELSE jet.pt
-    END - 0.125) / 0.25 AS BIGINT) * 0.25 + 0.125
+GROUP BY mysql.default.HistogramBin(jet.pt, 15, 40, 100)
 ORDER BY x;

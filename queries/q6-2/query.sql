@@ -103,18 +103,8 @@ singular_system AS (
 
 -- Generate the histogram
 SELECT
-  CAST((
-    CASE
-      WHEN btag < 0 THEN 0
-      WHEN btag > 1 THEN 1
-      ELSE btag
-    END - 0.005) / 0.01 AS BIGINT) * 0.01 + 0.005 AS x,
+  mysql.default.HistogramBin(btag, 0, 1, 100) AS x,
   COUNT(*) AS y
 FROM singular_system
-GROUP BY CAST((
-    CASE
-      WHEN btag < 0 THEN 0
-      WHEN btag > 1 THEN 1
-      ELSE btag
-    END - 0.005) / 0.01 AS BIGINT) * 0.01 + 0.005
+GROUP BY mysql.default.HistogramBin(btag, 0, 1, 100)
 ORDER BY x;
