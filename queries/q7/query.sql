@@ -2,7 +2,7 @@
 WITH unnested_jets AS (
   SELECT
     *,
-    CAST( ROW( j.pt, j.eta, j.phi, j.mass, j.idx ) AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, idx INTEGER ) ) AS j
+    CAST( ROW( j.pt, j.eta, j.phi, j.mass, j.idx ) AS ROW( pt REAL, eta REAL, phi REAL, mass REAL, idx INTEGER ) ) AS j
   FROM {input_table}
   CROSS JOIN UNNEST(Jet) WITH ORDINALITY AS j (pt, eta, phi, mass, puId, btag, idx)
   WHERE j.pt > 30

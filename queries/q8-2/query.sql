@@ -6,11 +6,11 @@ WITH uniform_structure_leptons AS (
     array_union(
       transform(
         COALESCE(Muon, ARRAY []),
-        x -> CAST( ROW(x.pt, x.eta, x.phi, x.mass, x.charge, 'm') AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, charge INTEGER, type CHAR ) )
+        x -> CAST( ROW(x.pt, x.eta, x.phi, x.mass, x.charge, 'm') AS ROW( pt REAL, eta REAL, phi REAL, mass REAL, charge INTEGER, type CHAR ) )
       ),
       transform(
         COALESCE(Electron, ARRAY []),
-        x -> CAST( ROW(x.pt, x.eta, x.phi, x.mass, x.charge, 'e') AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, charge INTEGER, type CHAR ) )
+        x -> CAST( ROW(x.pt, x.eta, x.phi, x.mass, x.charge, 'e') AS ROW( pt REAL, eta REAL, phi REAL, mass REAL, charge INTEGER, type CHAR ) )
       )
     ) AS Leptons
   FROM {input_table}
@@ -29,7 +29,7 @@ lepton_pairs AS (
         pt1 * ( ( exp(eta1) - exp(-eta1) ) / 2.0 ) + pt2 * ( ( exp(eta2) - exp(-eta2) ) / 2.0 ),
         pt1 * cosh(eta1) * pt1 * cosh(eta1) * pt1 + mass1 * mass1 + pt2 * cosh(eta2) * pt2 * cosh(eta2) * pt2 + mass2 * mass2
       ) AS
-      ROW (x DOUBLE, y DOUBLE, z DOUBLE, e DOUBLE)
+      ROW (x REAL, y REAL, z REAL, e REAL)
     ) AS l,
     idx1 AS l1_idx,
     idx2 AS l2_idx

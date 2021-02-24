@@ -2,9 +2,9 @@
 WITH tri_jets AS (
   SELECT
     event,
-    CAST( ROW( m1.pt, m1.eta, m1.phi, m1.mass, m1.btag ) AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, btag DOUBLE ) ) AS m1,
-    CAST( ROW( m2.pt, m2.eta, m2.phi, m2.mass, m2.btag ) AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, btag DOUBLE ) ) AS m2,
-    CAST( ROW( m3.pt, m3.eta, m3.phi, m3.mass, m3.btag ) AS ROW( pt DOUBLE, eta DOUBLE, phi DOUBLE, mass DOUBLE, btag DOUBLE ) ) AS m3
+    CAST( ROW( m1.pt, m1.eta, m1.phi, m1.mass, m1.btag ) AS ROW( pt REAL, eta REAL, phi REAL, mass REAL, btag REAL ) ) AS m1,
+    CAST( ROW( m2.pt, m2.eta, m2.phi, m2.mass, m2.btag ) AS ROW( pt REAL, eta REAL, phi REAL, mass REAL, btag REAL ) ) AS m2,
+    CAST( ROW( m3.pt, m3.eta, m3.phi, m3.mass, m3.btag ) AS ROW( pt REAL, eta REAL, phi REAL, mass REAL, btag REAL ) ) AS m3
   FROM {input_table}
   CROSS JOIN UNNEST(Jet) WITH ORDINALITY AS m1 (pt, eta, phi, mass, puId, btag, idx)
   CROSS JOIN UNNEST(Jet) WITH ORDINALITY AS m2 (pt, eta, phi, mass, puId, btag, idx)
@@ -24,7 +24,7 @@ expanded_tri_jet AS (
         m1.pt * ( ( exp(m1.eta) - exp(-m1.eta) ) / 2.0 ),
         m1.pt * cosh(m1.eta) * m1.pt * cosh(m1.eta) * m1.pt + m1.mass * m1.mass
       ) AS
-      ROW (x DOUBLE, y DOUBLE, z DOUBLE, e DOUBLE)
+      ROW (x REAL, y REAL, z REAL, e REAL)
     ) AS m1,
     CAST(
       ROW(
@@ -33,7 +33,7 @@ expanded_tri_jet AS (
         m2.pt * ( ( exp(m2.eta) - exp(-m2.eta) ) / 2.0 ),
         m2.pt * cosh(m2.eta) * m2.pt * cosh(m2.eta) * m2.pt + m2.mass * m2.mass
       ) AS
-      ROW (x DOUBLE, y DOUBLE, z DOUBLE, e DOUBLE)
+      ROW (x REAL, y REAL, z REAL, e REAL)
     ) AS m2,
     CAST(
       ROW(
@@ -42,7 +42,7 @@ expanded_tri_jet AS (
         m3.pt * ( ( exp(m3.eta) - exp(-m3.eta) ) / 2.0 ),
         m3.pt * cosh(m3.eta) * m3.pt * cosh(m3.eta) * m3.pt + m3.mass * m3.mass
       ) AS
-      ROW (x DOUBLE, y DOUBLE, z DOUBLE, e DOUBLE)
+      ROW (x REAL, y REAL, z REAL, e REAL)
     ) AS m3,
     m1 AS m1_particle,
     m2 AS m2_particle,
