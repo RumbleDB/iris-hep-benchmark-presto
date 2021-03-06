@@ -9,7 +9,7 @@ CREATE TABLE memory.cern.Run2012B_SingleMu_small (
     run  INTEGER,
     luminosityBlock  BIGINT,
     event  BIGINT,
-    HLT_IsoMu24_eta2p  BOOLEAN,
+    HLT_IsoMu24_eta2p1  BOOLEAN,
     HLT_IsoMu24  BOOLEAN,
     HLT_IsoMu17_eta2p1_LooseIsoPFTau20  BOOLEAN,
     PV_npvs  INTEGER,
