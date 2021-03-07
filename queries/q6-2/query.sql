@@ -22,7 +22,7 @@ expanded_tri_jet AS (
         m1.pt * cos(m1.phi),
         m1.pt * sin(m1.phi),
         m1.pt * ( ( exp(m1.eta) - exp(-m1.eta) ) / 2.0 ),
-        m1.pt * cosh(m1.eta) * m1.pt * cosh(m1.eta) * m1.pt + m1.mass * m1.mass
+        sqrt(m1.pt * cosh(m1.eta) * m1.pt * cosh(m1.eta) + m1.mass * m1.mass)
       ) AS
       ROW (x REAL, y REAL, z REAL, e REAL)
     ) AS m1,
@@ -31,7 +31,7 @@ expanded_tri_jet AS (
         m2.pt * cos(m2.phi),
         m2.pt * sin(m2.phi),
         m2.pt * ( ( exp(m2.eta) - exp(-m2.eta) ) / 2.0 ),
-        m2.pt * cosh(m2.eta) * m2.pt * cosh(m2.eta) * m2.pt + m2.mass * m2.mass
+        sqrt(m2.pt * cosh(m2.eta) * m2.pt * cosh(m2.eta) + m2.mass * m2.mass)
       ) AS
       ROW (x REAL, y REAL, z REAL, e REAL)
     ) AS m2,
@@ -40,7 +40,7 @@ expanded_tri_jet AS (
         m3.pt * cos(m3.phi),
         m3.pt * sin(m3.phi),
         m3.pt * ( ( exp(m3.eta) - exp(-m3.eta) ) / 2.0 ),
-        m3.pt * cosh(m3.eta) * m3.pt * cosh(m3.eta) * m3.pt + m3.mass * m3.mass
+        sqrt(m3.pt * cosh(m3.eta) * m3.pt * cosh(m3.eta) + m3.mass * m3.mass)
       ) AS
       ROW (x REAL, y REAL, z REAL, e REAL)
     ) AS m3,
