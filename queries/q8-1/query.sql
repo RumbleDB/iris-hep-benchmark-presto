@@ -27,7 +27,7 @@ lepton_pairs AS (
         pt1 * cos(phi1) + pt2 * cos(phi2),
         pt1 * sin(phi1) + pt2 * sin(phi2),
         pt1 * ( ( exp(eta1) - exp(-eta1) ) / 2.0 ) + pt2 * ( ( exp(eta2) - exp(-eta2) ) / 2.0 ),
-        pt1 * cosh(eta1) * pt1 * cosh(eta1) * pt1 + mass1 * mass1 + pt2 * cosh(eta2) * pt2 * cosh(eta2) * pt2 + mass2 * mass2
+        sqrt(pt1 * cosh(eta1) * pt1 * cosh(eta1) + mass1 * mass1) + sqrt(pt2 * cosh(eta2) * pt2 * cosh(eta2) + mass2 * mass2)
       ) AS
       ROW (x REAL, y REAL, z REAL, e REAL)
     ) AS l,
@@ -61,7 +61,7 @@ processed_pairs AS (
 
 -- For each event get the max pt of the other leptons
 other_max_pt AS (
-  SELECT event, CAST(max_by(2 * system[4] * pt * (1.0 - cos((system[5]- phi + pi()) % (2 * pi()) - pi())), pt) AS REAL) AS pt
+  SELECT event, CAST(max_by(sqrt(2 * system[4] * pt * (1.0 - cos((system[5]- phi + pi()) % (2 * pi()) - pi()))), pt) AS REAL) AS pt
   FROM processed_pairs
   CROSS JOIN UNNEST(system[3]) WITH ORDINALITY AS l (pt, eta, phi, mass, charge, type, idx)
   WHERE idx != system[1] AND idx != system[2]

@@ -27,7 +27,7 @@ lepton_pairs AS (
         pt1 * cos(phi1) + pt2 * cos(phi2),
         pt1 * sin(phi1) + pt2 * sin(phi2),
         pt1 * ( ( exp(eta1) - exp(-eta1) ) / 2.0 ) + pt2 * ( ( exp(eta2) - exp(-eta2) ) / 2.0 ),
-        pt1 * cosh(eta1) * pt1 * cosh(eta1) * pt1 + mass1 * mass1 + pt2 * cosh(eta2) * pt2 * cosh(eta2) * pt2 + mass2 * mass2
+        sqrt(pt1 * cosh(eta1) * pt1 * cosh(eta1) + mass1 * mass1) + sqrt(pt2 * cosh(eta2) * pt2 * cosh(eta2) + mass2 * mass2)
       ) AS
       ROW (x REAL, y REAL, z REAL, e REAL)
     ) AS l,
