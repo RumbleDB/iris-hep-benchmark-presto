@@ -14,11 +14,11 @@ filtered_particles AS (
     event,
     j,
     COALESCE(
-      cardinality(filter(Electron, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 40) ),
+      cardinality(filter(Electron, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 0.4) ),
       0
     ) AS filtered_electron_count,
     COALESCE(
-      cardinality(filter(Muon, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 40) ),
+      cardinality(filter(Muon, x -> x.pt > 10 AND sqrt( (j.eta - x.eta) * (j.eta - x.eta) + pow( (j.phi - x.phi + pi()) % (2 * pi()) - pi(), 2) ) < 0.4) ),
       0
     ) AS filtered_muon_count
   FROM unnested_jets
