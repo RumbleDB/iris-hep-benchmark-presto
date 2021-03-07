@@ -8,8 +8,7 @@ WITH temp AS (
     AS m2 (pt, eta, phi, mass, charge, pfRelIso03_all, pfRelIso04_all, tightId,
            softId, dxy, dxyErr, dz, dzErr, jetIdx, genPartIdx, idx)
   WHERE cardinality(Muon) > 1 AND m1.idx < m2.idx AND m1.charge <> m2.charge AND
-    SQRT(2 * m1.pt * m2.pt * (COSH(m1.eta - m2.eta) - COS(m1.phi - m2.phi))) > 60 AND
-    SQRT(2 * m1.pt * m2.pt * (COSH(m1.eta - m2.eta) - COS(m1.phi - m2.phi))) < 120
+    2 * m1.pt * m2.pt * (COSH(m1.eta - m2.eta) - COS(m1.phi - m2.phi)) BETWEEN 60 AND 120
   GROUP BY event, MET.sumet
   HAVING COUNT(*) > 0
 )
