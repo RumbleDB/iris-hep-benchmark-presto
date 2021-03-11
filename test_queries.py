@@ -81,7 +81,7 @@ def test_query(query_id, pytestconfig, presto):
     output = presto.run(query)
     end_timestamp = time.time()
     df = pd.read_csv(output, dtype= {'x': np.float64, 'y': np.int32})
-    print(df)
+    logging.info(df)
 
     running_time = end_timestamp - start_timestamp
     logging.info('Running time: {:.2f}s'.format(running_time))
@@ -101,7 +101,7 @@ def test_query(query_id, pytestconfig, presto):
 
     # Read reference result
     df_ref = pd.read_csv(ref_file, dtype= {'x': np.float64, 'y': np.int32})
-    print(df_ref)
+    logging.info(df_ref)
 
     # Plot histogram
     if pytestconfig.getoption('plot_histogram'):
