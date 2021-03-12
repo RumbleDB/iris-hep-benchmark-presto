@@ -93,7 +93,7 @@ def test_query(query_id, pytestconfig, presto):
            WHERE state = 'FINISHED';"""
     output = presto.run(query_id_query)
     query_id = pd.read_csv(output, header=0, names=['query_id'])
-    logging.info("Query ID:", query_id.query_id[0])
+    logging.info("Query ID: %s", query_id.query_id[0])
 
     # Freeze reference result
     if pytestconfig.getoption('freeze_result'):
