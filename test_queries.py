@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
-from abc import ABC, abstractmethod
 import io
 import json
 import logging
 from matplotlib import pyplot as plt
 import numpy as np
 from os.path import dirname, join
-import subprocess
 import sys
 import time
 
@@ -17,34 +15,7 @@ import requests
 from urllib.parse import quote_plus, urlencode
 import warnings
 
-
-# This superclass might be useful in case other means
-# of querying Presto are added in the future
-class PrestoProxy(ABC):
-  @abstractmethod
-  def run(self, query_file, other_params):
-    pass
-
-
-class PrestoCliProxy(PrestoProxy):
-  def __init__(self, cmd, server, catalogue, schema):
-    self.cmd = cmd
-    self.server = server
-    self.catalogue = catalogue
-    self.schema = schema
-
-  def run(self, query):
-    # Assemble command
-    cmd = [self.cmd,
-           '--server', self.server,
-           '--catalog', self.catalogue,
-           '--schema', self.schema,
-           '--file', '/dev/stdin',
-           '--output-format', 'CSV_HEADER']
-
-    # Run query and read result
-    output = subprocess.check_output(cmd, encoding='utf-8', input=query)
-    return io.StringIO(output)
+from scripts.presto import PrestoCliProxy
 
 
 @pytest.fixture(scope="function")
@@ -93,7 +64,8 @@ def test_query(query_id, pytestconfig, presto):
     start_timestamp = time.time()
     output = presto.run(query)
     end_timestamp = time.time()
-    df = pd.read_csv(output, dtype= {'x': np.float64, 'y': np.int32})
+    df = pd.read_csv(io.StringIO(output),
+                     dtype= {'x': np.float64, 'y': np.int32})
     logging.info(df)
 
     running_time = end_timestamp - start_timestamp
@@ -105,7 +77,7 @@ def test_query(query_id, pytestconfig, presto):
            FROM system.runtime.queries
            WHERE state = 'FINISHED';"""
     output = presto.run(query_id_query)
-    query_id = pd.read_csv(output, header=0, names=['query_id'])
+    query_id = pd.read_csv(io.StringIO(output), header=0, names=['query_id'])
     logging.info("Query ID: %s", query_id.query_id[0])
 
     # Freeze reference result

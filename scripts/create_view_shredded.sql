@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW memory.cern.view AS
+CREATE OR REPLACE VIEW {view_name} AS
 WITH jets AS (
   SELECT event,
     array_agg(
@@ -9,7 +9,7 @@ WITH jets AS (
                mass REAL,
                puId BOOLEAN,
                btag REAL))) AS Jet
-  FROM memory.cern.run2012b_singlemu_small
+  FROM {table_name}
   CROSS JOIN UNNEST(Jet_pt, Jet_eta, Jet_phi, Jet_mass, Jet_puId, Jet_btag)
              AS t (pt, eta, phi, mass, puId, btag)
   GROUP BY event
@@ -35,7 +35,7 @@ electrons AS (
                pfId         BOOLEAN,
                jetIdx       INTEGER,
                genPartIdx   INTEGER))) AS Electron
-  FROM memory.cern.run2012b_singlemu_small
+  FROM {table_name}
   CROSS JOIN UNNEST(Electron_pt, Electron_eta, Electron_phi, Electron_mass,
                     Electron_charge, Electron_pfRelIso03_all, Electron_dxy,
                     Electron_dxyErr,  Electron_dz, Electron_dzErr,
@@ -67,7 +67,7 @@ muons AS (
                dzErr        REAL,
                jetIdx       INTEGER,
                genPartIdx   INTEGER))) AS Muon
-  FROM memory.cern.run2012b_singlemu_small
+  FROM {table_name}
   CROSS JOIN UNNEST(Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge,
                     Muon_pfRelIso03_all, Muon_pfRelIso04_all, Muon_tightId,
                     Muon_softId, Muon_dxy, Muon_dxyErr, Muon_dz, Muon_dzErr,
@@ -101,7 +101,7 @@ SELECT
   COALESCE(Electron, ARRAY []) AS Electron,
   COALESCE(Muon, ARRAY []) AS Muon,
   COALESCE(Jet, ARRAY []) AS Jet
-FROM memory.cern.run2012b_singlemu_small AS main
+FROM {table_name} AS main
 FULL JOIN jets AS j on main.event = j.event
 FULL JOIN electrons AS e ON main.event = e.event
 FULL JOIN muons AS m ON main.event = m.event;

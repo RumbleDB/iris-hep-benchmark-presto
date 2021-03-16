@@ -1,17 +1,17 @@
--- Create a schema which will hold our database
-CREATE SCHEMA IF NOT EXISTS memory.cern;
-
--- Drop the table if it already exists
-DROP TABLE IF EXISTS memory.cern.Run2012B_SingleMu_small;
-
--- Creates the `Run2012B_SingleMu_small` table
-CREATE TABLE memory.cern.Run2012B_SingleMu_small (
+CREATE TABLE {table_name} (
     run                     INTEGER,
     luminosityBlock         BIGINT,
     event                   BIGINT,
-    HLT_IsoMu24_eta2p1      BOOLEAN,
-    HLT_IsoMu24             BOOLEAN,
-    HLT_IsoMu17_eta2p1_LooseIsoPFTau20 BOOLEAN,
+    MET_pt                  REAL,
+    MET_phi                 REAL,
+    MET_sumet               REAL,
+    MET_significance        REAL,
+    MET_CovXX               REAL,
+    MET_CovXY               REAL,
+    MET_CovYY               REAL,
+    HLT_IsoMu24_eta2p1                  BOOLEAN,
+    HLT_IsoMu24                         BOOLEAN,
+    HLT_IsoMu17_eta2p1_LooseIsoPFTau20  BOOLEAN,
     PV_npvs                 INTEGER,
     PV_x                    REAL,
     PV_y                    REAL,
@@ -47,6 +47,22 @@ CREATE TABLE memory.cern.Run2012B_SingleMu_small (
     Electron_pfId           ARRAY(BOOLEAN),
     Electron_jetIdx         ARRAY(INTEGER),
     Electron_genPartIdx     ARRAY(INTEGER),
+    nPhoton                 BIGINT,
+    Photon_pt               ARRAY(REAL),
+    Photon_eta              ARRAY(REAL),
+    Photon_phi              ARRAY(REAL),
+    Photon_mass             ARRAY(REAL),
+    Photon_charge           ARRAY(INTEGER),
+    Photon_pfRelIso03_all   ARRAY(REAL),
+    Photon_jetIdx           ARRAY(INTEGER),
+    Photon_genPartIdx       ARRAY(INTEGER),
+    nJet                    BIGINT,
+    Jet_pt                  ARRAY(REAL),
+    Jet_eta                 ARRAY(REAL),
+    Jet_phi                 ARRAY(REAL),
+    Jet_mass                ARRAY(REAL),
+    Jet_puId                ARRAY(BOOLEAN),
+    Jet_btag                ARRAY(REAL),
     nTau                    BIGINT,
     Tau_pt                  ARRAY(REAL),
     Tau_eta                 ARRAY(REAL),
@@ -67,29 +83,9 @@ CREATE TABLE memory.cern.Run2012B_SingleMu_small (
     Tau_idAntiEleMedium     ARRAY(BOOLEAN),
     Tau_idAntiEleTight      ARRAY(BOOLEAN),
     Tau_idAntiMuLoose       ARRAY(BOOLEAN),
-    Tau_idAntiMuMedium      (BOOLEAN),
-    Tau_idAntiMuTight       ARRAY(BOOLEAN),
-    nPhoton                 BIGINT,
-    Photon_pt               ARRAY(REAL),
-    Photon_eta              ARRAY(REAL),
-    Photon_phi              ARRAY(REAL),
-    Photon_mass             ARRAY(REAL),
-    Photon_charge           ARRAY(INTEGER),
-    Photon_pfRelIso03_all   ARRAY(REAL),
-    Photon_jetIdx           ARRAY(INTEGER),
-    Photon_genPartIdx       ARRAY(INTEGER),
-    MET_pt                  REAL,
-    MET_phi                 REAL,
-    MET_sumet               REAL,
-    MET_significance        REAL,
-    MET_CovXX               REAL,
-    MET_CovXY               REAL,
-    MET_CovYY               REAL,
-    nJet                    BIGINT,
-    Jet_pt                  ARRAY(REAL),
-    Jet_eta                 ARRAY(REAL),
-    Jet_phi                 ARRAY(REAL),
-    Jet_mass                ARRAY(REAL),
-    Jet_puId                ARRAY(BOOLEAN),
-    Jet_btag                ARRAY(REAL)
+    Tau_idAntiMuMedium      ARRAY(BOOLEAN),
+    Tau_idAntiMuTight       ARRAY(BOOLEAN)
+) WITH (
+    EXTERNAL_LOCATION = '{location}',
+    FORMAT = 'PARQUET'
 );
