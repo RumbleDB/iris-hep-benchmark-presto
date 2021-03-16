@@ -27,12 +27,18 @@ class PrestoProxy(ABC):
 
 
 class PrestoCliProxy(PrestoProxy):
-  def __init__(self, cmd):
+  def __init__(self, cmd, server, catalogue, schema):
     self.cmd = cmd
+    self.server = server
+    self.catalogue = catalogue
+    self.schema = schema
 
   def run(self, query):
     # Assemble command
     cmd = [self.cmd,
+           '--server', self.server,
+           '--catalog', self.catalogue,
+           '--schema', self.schema,
            '--file', '/dev/stdin',
            '--output-format', 'CSV_HEADER']
 
@@ -45,8 +51,15 @@ class PrestoCliProxy(PrestoProxy):
 def presto(pytestconfig):
   # By default use the CLI
   presto_cmd = pytestconfig.getoption('presto_cmd')
+  presto_server = pytestconfig.getoption('presto_server')
+  presto_catalogue = pytestconfig.getoption('presto_catalogue')
+  presto_schema = pytestconfig.getoption('presto_schema')
   logging.info('Using executable %s', presto_cmd)
-  return PrestoCliProxy(presto_cmd)
+  logging.info('Using server %s', presto_server)
+  logging.info('Using catalogue %s', presto_catalogue)
+  logging.info('Using schema %s', presto_schema)
+  return PrestoCliProxy(presto_cmd, presto_server, presto_catalogue,
+                        presto_schema)
 
 
 def test_query(query_id, pytestconfig, presto):

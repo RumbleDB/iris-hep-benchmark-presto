@@ -25,7 +25,7 @@ parser.add_argument("--catalog", type=str, default="memory",
     help="Specifies the catalog to which the table is added.")
 parser.add_argument("--dump_count", type=int, default=400,
     help="The number of instances to be inserted into the table at each SQL INSERT.")
-parser.add_argument("--presto_script", type=str, default="run_presto.sh",
+parser.add_argument("--presto_script", type=str, default="presto.sh",
     help="Path to the script which is used to execute commands over presto.")
 
 
@@ -59,7 +59,7 @@ def add_commas(path, col_name="str", out_dir="../data", out_name="stringified_ne
 
 
 def gradually_insert(path, col_name='str', dump_count=400,
-  table_name="memory.cern.Run2012B_SingleMu_small", presto_script="run_presto.sh"):
+  table_name="memory.cern.Run2012B_SingleMu_small", presto_script="presto.sh"):
   def _execute_command(q):
     with open("temp.sql", "w") as f:
       f.write(collector)

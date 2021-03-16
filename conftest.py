@@ -1,5 +1,6 @@
 import glob
 from os.path import dirname, join
+from socket import getfqdn
 
 def pytest_addoption(parser):
   parser.addoption('-Q', '--query-id', action='append', default=[],
@@ -14,8 +15,15 @@ def pytest_addoption(parser):
   parser.addoption('-I', '--input-table', action='store',
                    help='Name of input table or view.')
   parser.addoption('-P', '--presto-cmd', action='store',
-                   default="scripts/run_presto.sh",
-                   help='Path to the script which sets up the DB.')
+                   default=join(dirname(__file__), 'scripts', 'presto.sh'),
+                   help='Path to the script that runs the Presto CLI.')
+  parser.addoption('-S', '--presto-server', action='store',
+                   default=getfqdn() + ':8080',
+                   help='URL as <host>:<port> of the Presto server.')
+  parser.addoption('-C', '--presto-catalogue', action='store', default='hive',
+                   help='Default catalogue to use in Presto.')
+  parser.addoption('--presto-schema', action='store', default='default',
+                   help='Default schema to use in Presto.')
   parser.addoption('--plot-histogram', action='store_true', default=False,
                    help='Plot resulting histogram as PNG file.')
 

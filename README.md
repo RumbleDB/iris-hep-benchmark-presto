@@ -21,13 +21,13 @@ The `set_up_cern_environment.sh` script is pre-configured to use the data in `da
 
 The `set_up_cern_environment.sh` script makes use of the following scripts (which can also be found in the `scripts` folder):
 
-* `run_presto.sh`: this script is used as a shorthand to submitting SQL queries to the Presto client. Make sure to set the values of the script variables such that it can work on your machine. The following are the variables which might need to be changed.
+* `presto.sh`: this script is used as a shorthand to submitting SQL queries to the Presto client. Make sure to set the values of the script variables such that it can work on your machine. The following are the variables which might need to be changed.
   * `host`: the hostname of your Presto server deployment
   * `port`: the port of your Presto server deployment
   * `catalog`: by default this is `memory`
   * `output_format`: by default this is `CSV_HEADER`, and should be left as such, unless you also change the references and the `pytest` script
   * `presto_jar`: the path to your Presto client jar
-* `run_presto.sh memory make_db.sql`: this will create the schema, and the table structure.
+* `presto.sh memory make_db.sql`: this will create the schema, and the table structure.
 * `memory create_view.sql`: this will create a view of the database, such that particles are encapsulated in `ROW` type entities.
 * `csv_to_sql_insert.py`: this will insert the contents of the database to Presto. The script offers the following options:
 
@@ -69,7 +69,7 @@ In case you need to change the default values, then make sure to make these chan
 
 ## Running Queries
 
-To run the queries, you need to run the `run_presto.sh <path-to-query>` command.
+To run the queries, you need to run the `presto.sh <path-to-query>` command.
 
 ## Testing the Correctness of the Queries
 
