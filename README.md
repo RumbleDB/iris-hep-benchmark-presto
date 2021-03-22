@@ -1,108 +1,107 @@
-# Presto SQL Queries
+# High-energy Physics Analysis Queries on PrestoDB
 
-## Introduction
+This repository contains implementations of High-energy Physics (HEP) analysis queries from [the IRIS HEP benchmark](https://github.com/iris-hep/adl-benchmarks-index) written in [SQL](https://en.wikipedia.org/wiki/SQL) to be run on [PrestoDB](https://prestodb.io/).
 
-This repository hosts a set of queries described at a high-level [here](https://github.com/iris-hep/adl-benchmarks-index). The queries are written in SQL for [Presto](https://prestosql.io/). Presto offers a unified front-end to a set of data store technologies such as Cassandra or HDFS. As part of its query interface, it uses a proprietary version of SQL. 
+## Motivation
 
-## Installation
+The purpose of this repository is to study the suitability of SQL for HEP analyses and to serve as a use case for improving database technologies. While SQL has often been considered unsuited for HEP analyses, we believe that the support for arrays and structured types introduced in SQL:1999 make SQL actually a rather good fit. As a high-level declarative language, it has the potential to bring many of its benefits to HEP including transparent query optimization, transparent caching, and a separation of the logical level (in the form of data model and query) from the physical level (in the form of storage formats and performance optimizations).
 
-To install the Presto server, follow these [instructions](https://prestodb.io/docs/current/installation/deployment.html). You then need to follow these [instructions](https://prestodb.io/docs/current/installation/cli.html) in order to set up a Presto client.
+## Prerequisites and Setup
 
-Since deploying the Presto server can involve quite a bit of configuration, we provide a pre-configured `etc` folder which can be downloaded from [here](https://polybox.ethz.ch/index.php/s/TuCtNXTH7XQg0t5/download). Make sure to change the `node.data-dir` property in `etc/node.properties`. This configuration features only one catalog: `memory`. Naturally, more can be added. It should be mentioned, however, that for testing these queries, we have only used the `memory` catalog.
+1. Install Python 3 with pip.
+1. Install the Python requirements:
+   ```bash
+   pip3 install -r requirements.txt
+   ```
+1. Install [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
+1. Clone [this repository](https://github.com/ingomueller-net/docker-presto) and bring up the services with Docker compose.
+1. Optionally download the [Presto CLI client](https://prestodb.io/docs/current/installation/cli.html) matching the version in the docker image.
+1. Set up [`scripts/presto.sh`](`scripts/presto.sh`), either based on [`scripts/presto.local.sh`](`scripts/presto.local.sh`) by modifying it to point to the Presto CLI executable from the previous step, or with the following command (which uses a Presto CLI in one of the docker images):
+   ```bash
+   cp scripts/presto.docker.sh scripts/presto.sh
+   ```
 
-## Setting up the environment
+## Data
 
-The `scripts` folder contains a number of scripts which are useful towards setting up a database. In order to set up the CERN database, one should follow the next instructions:
+The benchmark defines a data set in the ROOT format, which is not supported by Presto. However, the [Rumble implementation](https://github.com/RumbleDB/hep-iris-benchmark-jsoniq) of the benchmark provides scripts to convert the data to Parquet, which Presto can query in-place.
 
-1. Start the Presto server
-1. Run the `set_up_cern_environment.sh` script
+### HDFS
 
-The `set_up_cern_environment.sh` script is pre-configured to use the data in `data/Run2012B_SingleMu-1000.parquet`, however feel free to pass a different dataset (from the same CERN database) as a first parameter to this script.
+You can run the queries against "external tables" consisting of Parquet files on HDFS. A basic HDFS installation is part of the services brought up by Docker compose. Read the instructions of that repository for details. The main steps are as follows:
 
-The `set_up_cern_environment.sh` script makes use of the following scripts (which can also be found in the `scripts` folder):
+1. Copy [`Run2012B_SingleMu-restructured-1000.parquet`](/data/Run2012B_SingleMu-restructured-1000.parquet) from this repository to the `data/` repository of the Docker compose project.
+1. Upload it to HFDS:
+   ```bash
+   docker exec -it docker-presto2_namenode_1 hadoop fs -mkdir /Run2012B_SingleMu-restructured-1000/
+   docker exec -it docker-presto_namenode_1 hadoop fs -put /data/Run2012B_SingleMu-restructured-1000.parquet /Run2012B_SingleMu-restructured-1000/
+   ```
+1. Create an external table with the provided [script](/scripts/create_table.py):
+   ```bash
+   scripts/create_table.py \
+       --table-name Run2012B_SingleMu_1000 \
+       --location hdfs://namenode/Run2012B_SingleMu-1000/ \
+       --variant native \
+       --view-name Run2012B_SingleMu_1000_view  # ignored for "native" variant
+   ```
+   Check out the help of that script in case you want to connect to Presto with non-default parameters.
 
-* `presto.sh`: this script is used as a shorthand to submitting SQL queries to the Presto client. Make sure to set the values of the script variables such that it can work on your machine. The following are the variables which might need to be changed.
-  * `host`: the hostname of your Presto server deployment
-  * `port`: the port of your Presto server deployment
-  * `catalog`: by default this is `memory`
-  * `output_format`: by default this is `CSV_HEADER`, and should be left as such, unless you also change the references and the `pytest` script
-  * `presto_jar`: the path to your Presto client jar
-* `presto.sh memory make_db.sql`: this will create the schema, and the table structure.
-* `memory create_view.sql`: this will create a view of the database, such that particles are encapsulated in `ROW` type entities.
-* `csv_to_sql_insert.py`: this will insert the contents of the database to Presto. The script offers the following options:
+### S3
 
-```
-$python csv_to_sql_insert.py -h
-usage: csv_to_sql_insert.py [-h] [--csv CSV] [--table TABLE]
-                            [--col_name COL_NAME] [--out_dir OUT_DIR]
-                            [--use_cached USE_CACHED]
-                            [--cached_path CACHED_PATH] [--catalog CATALOG]
-                            [--dump_count DUMP_COUNT]
-                            [--presto_script PRESTO_SCRIPT]
+You can also read the data from an S3 bucket if you run Presto in an EC2 instance with a properly configured [instance profile](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2_instance-profiles.html). Assume the data is uploaded to S3, use the following command to create an external table based on these files:
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --csv CSV             Path to the CSV containing the entries
-  --table TABLE         The name of the table into which the entries are
-                        inserted
-  --col_name COL_NAME   The name of the column where the stringified row is
-                        temporarily stored.
-  --out_dir OUT_DIR     The path to the directory where the intermediary
-                        outputs of the script are stored.
-  --use_cached USE_CACHED
-                        If false, the script executes the entire conversion
-                        process from parquet to CSVbefore inserting. Otherwise
-                        it uses the results of a previous run.
-  --cached_path CACHED_PATH
-                        Specifies the location of the cached data. Only used
-                        if --cached_path=True.
-  --catalog CATALOG     Specifies the catalog to which the table is added.
-  --dump_count DUMP_COUNT
-                        The number of instances to be inserted into the table
-                        at each SQL INSERT.
-  --presto_script PRESTO_SCRIPT
-                        Path to the script which is used to execute commands
-                        over presto.
+```bash
+scripts/create_table.py \
+    --table-name Run2012B_SingleMu_1000 \
+    --location s3a://my_bucket/Run2012B_SingleMu_1000/ \
+    --variant native \
+    --view-name Run2012B_SingleMu_1000_view  # ignored for "native" variant
 ```
 
-In case you need to change the default values, then make sure to make these changes in `set_up_cern_environment.sh`, in the line calling `csv_to_sql_insert.py`.
+### Shredded Data Format
+
+It is also possible to read Parquet files where all structs are "shredded" into columns (see the [Rumble implementation](https://github.com/RumbleDB/hep-iris-benchmark-jsoniq) for details). Use a command along the following lines for that purpose:
+
+```bash
+scripts/create_table.py \
+    --table-name Run2012B_SingleMu_1000 \
+    --location s3a://my_bucket/Run2012B_SingleMu_shredded_1000/ \
+    --variant shredded \
+    --view-name Run2012B_SingleMu_shredded_1000_view
+```
+
+The queries should then be run agains `Run2012B_SingleMu_shredded_1000_view` which exposes the data in the same format as the non-shredded "native" Parquet files.
 
 ## Running Queries
 
-To run the queries, you need to run the `presto.sh <path-to-query>` command.
-
-## Testing the Correctness of the Queries
-
-The repository offers a test suite which checks the output of the queries against a set of reference results. These reference results can be found in each query folder, and have the name `ref-1000.csv`. The reference results have been extracted from the `data/Run2012B_SingleMu-1000.parquet` dataset.
-
-The tests can be executed using the `test_queries.py` script located in the root directory. In addition to the default `pytest` options, it offers the following arguments:
+Queries are run through [`test_queries.py`](/test_queries.py). Run the following command to see its options:
 
 ```
-$python test_queries.py -h  
-[...]
+$ ./test_queries.py --help
+usage: test_queries.py [options] [file_or_dir] [file_or_dir] [...]
+
+...
+custom options:
   -Q QUERY_ID, --query-id=QUERY_ID
                         Folder name of query to run.
   -F FREEZE_RESULT, --freeze-result=FREEZE_RESULT
                         Whether the results of the query should be persisted to disk.
   -N NUM_EVENTS, --num-events=NUM_EVENTS
-                        Number of events taken from the input file. This influences which reference file
-                        should be taken.
-  -I INPUT_PATH, --input-path=INPUT_PATH
-                        Path to input ROOT file.
-  -S SCRIPT_PATH, --script-path=SCRIPT_PATH
-                        Path to the script which sets up the DB.
+                        Number of events taken from the input file. This influences which reference file should be taken.
+  -I INPUT_TABLE, --input-table=INPUT_TABLE
+                        Name of input table or view.
   -P PRESTO_CMD, --presto-cmd=PRESTO_CMD
-                        Path to the script which sets up the DB.
+                        Path to the script that runs the Presto CLI.
+  -S PRESTO_SERVER, --presto-server=PRESTO_SERVER
+                        URL as <host>:<port> of the Presto server.
+  -C PRESTO_CATALOGUE, --presto-catalogue=PRESTO_CATALOGUE
+                        Default catalogue to use in Presto.
+  --presto-schema=PRESTO_SCHEMA
+                        Default schema to use in Presto.
   --plot-histogram      Plot resulting histogram as PNG file.
-
 ```
 
-To run all queries one should use the command `python test_queries.py -v`. To run a specific query, one can use `python test_queries.py -Q <path-to-query-folder>`.
+For example, the following command runs queries `6-1` and `6-2` against the table created above:
 
-When running tests, you do not need to run the `set_up_cern_environment.sh` beforehand. This is automatically executed at the beginning of the tests. <font color='red'>Note that the Presto server must be started prior to running the tests!</font>
-
-## Known Execution Issues
-
-* When starting the Presto server, one might see an error of the following sort: `ERROR	main com.facebook.presto.server.PrestoServer	No factory for function namespace manager mysql`, with the top of the stack trace indicating `java.lang.IllegalStateException: No factory for function namespace manager mysql`. Even if `mysql` is selected in the `etc/function-namespace/memory.properties` configuration file, this error can unexpectedly occur. To fix this, it is indicated to use the latest version of Presto server. This was tested on `presto-server-334` and indeed no error was reported.
-
-* Note that Presto has no dedicated means of importing a `.csv` file (see [here](https://github.com/prestodb/presto/issues/11055)). This is the reason why the addition of `.csv` data is done manually using SQL `INSERT` operations.
+```
+./test_queries.py -vs --num-events 1000 --query-id query-6-1 --query-id query-6-2
+```
