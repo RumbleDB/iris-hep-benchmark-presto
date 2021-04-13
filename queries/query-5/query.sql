@@ -11,7 +11,7 @@ WITH temp AS (
     cardinality(Muon) > 1 AND
     m1.idx < m2.idx AND
     m1.charge <> m2.charge AND
-    2 * m1.pt * m2.pt * (COSH(m1.eta - m2.eta) - COS(m1.phi - m2.phi)) BETWEEN 60 AND 120
+    SQRT(2 * m1.pt * m2.pt * (COSH(m1.eta - m2.eta) - COS(m1.phi - m2.phi))) BETWEEN 60 AND 120
   GROUP BY event, MET.pt
   HAVING COUNT(*) > 0
 )
