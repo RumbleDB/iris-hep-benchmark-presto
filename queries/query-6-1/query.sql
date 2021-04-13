@@ -49,9 +49,9 @@ singular_system AS (
   SELECT
     event,
     min_by(
-      ARRAY [m1, m2, m3],
+      CAST(sqrt(x2 + y2) AS REAL),
       abs(172.5 - sqrt(e2 - x2 - y2 - z2))
-    ) AS jet_system
+    ) AS tri_jet_pt
   FROM condensed_tri_jet
   GROUP BY event
 )
@@ -59,9 +59,8 @@ singular_system AS (
 
 -- Generate the histogram
 SELECT
-  mysql.default.HistogramBin(jet.pt, 15, 40, 100) AS x,
+  mysql.default.HistogramBin(tri_jet_pt, 15, 40, 100) AS x,
   COUNT(*) AS y
 FROM singular_system
-CROSS JOIN UNNEST(jet_system) AS jet
-GROUP BY mysql.default.HistogramBin(jet.pt, 15, 40, 100)
+GROUP BY mysql.default.HistogramBin(tri_jet_pt, 15, 40, 100)
 ORDER BY x;
