@@ -83,7 +83,8 @@ def test_query(query_id, pytestconfig, presto):
     # Normalize query result
     df = df[df.y > 0]
     df = df[['x', 'y']]
-    df.x = df.x.round(6)
+    df.x = df.x.astype(float).round(6)
+    df.y = df.y.astype(int)
     df.reset_index(drop=True, inplace=True)
 
     # Freeze reference result
@@ -102,7 +103,8 @@ def test_query(query_id, pytestconfig, presto):
     # Normalize reference and query result
     df_ref = df_ref[df_ref.y > 0]
     df_ref = df_ref[['x', 'y']]
-    df_ref.x = df_ref.x.round(6)
+    df_ref.x = df_ref.x.astype(float).round(6)
+    df_ref.y = df_ref.y.astype(int)
     df_ref.reset_index(drop=True, inplace=True)
 
     # Assert correct result
