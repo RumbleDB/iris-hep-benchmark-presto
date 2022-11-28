@@ -32,14 +32,14 @@ You can run the queries against "external tables" consisting of Parquet files on
 1. Copy [`Run2012B_SingleMu-restructured-1000.parquet`](/data/Run2012B_SingleMu-restructured-1000.parquet) from this repository to the `data/` repository of the Docker compose project.
 1. Upload it to HFDS:
    ```bash
-   docker exec -it docker-presto2_namenode_1 hadoop fs -mkdir /Run2012B_SingleMu-restructured-1000/
-   docker exec -it docker-presto_namenode_1 hadoop fs -put /data/Run2012B_SingleMu-restructured-1000.parquet /Run2012B_SingleMu-restructured-1000/
+   docker compose exec -it namenode hadoop fs -mkdir /Run2012B_SingleMu-restructured-1000/
+   docker compose exec -it namenode hadoop fs -put /data/Run2012B_SingleMu-restructured-1000.parquet /Run2012B_SingleMu-restructured-1000/
    ```
 1. Create an external table with the provided [script](/scripts/create_table.py):
    ```bash
    scripts/create_table.py \
        --table-name Run2012B_SingleMu_1000 \
-       --location hdfs://namenode/Run2012B_SingleMu-1000/ \
+       --location hdfs://namenode/Run2012B_SingleMu-restructured-1000/ \
        --variant native \
        --view-name Run2012B_SingleMu_1000_view  # ignored for "native" variant
    ```
