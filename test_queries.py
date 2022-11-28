@@ -3,17 +3,17 @@
 import io
 import json
 import logging
-from matplotlib import pyplot as plt
-import numpy as np
 from os.path import dirname, join
 import sys
 import time
+from urllib.parse import quote_plus, urlencode
+import warnings
 
+from matplotlib import pyplot as plt
+import numpy as np
 import pandas as pd
 import pytest
 import requests
-from urllib.parse import quote_plus, urlencode
-import warnings
 
 from scripts.presto import PrestoCliProxy
 
